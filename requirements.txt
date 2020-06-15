@@ -1,0 +1,6 @@
+ipython>=4.0.2
+nose
+requests
+ipykernel>=4.2.2
+notebook>=4.2
+tornado>=4
