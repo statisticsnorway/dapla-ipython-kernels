@@ -1,6 +1,11 @@
 ipython>=4.0.2
-nose
 requests
+responses
 ipykernel>=4.2.2
 notebook>=4.2
 tornado>=4
+gcsfs
+pyarrow
+pandas
+google-auth>=1.2
+google-auth-oauthlib

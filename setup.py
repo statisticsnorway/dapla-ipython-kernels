@@ -15,11 +15,16 @@ def read(filename):
 
 DEPENDENCIES = [
     'ipython>=4.0.2'
-    'nose'
     'requests'
+    'responses'
     'ipykernel>=4.2.2'
     'notebook>=4.2'
     'tornado>=4'
+    'gcsfs'
+    'pyarrow'
+    'pandas'
+    'google-auth>=1.2'
+    'google-auth-oauthlib'
 ]
 
 setup(
@@ -35,7 +40,7 @@ setup(
     long_description=read("README.md"),
     long_description_content_type="text/markdown",
 
-    packages=find_packages(exclude=('tests', 'examples',)),
+    packages=find_packages(exclude=('tests',)),
 
     install_requires=DEPENDENCIES,
 
