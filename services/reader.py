@@ -27,6 +27,6 @@ class DataSourceReader:
         else:
             gcs_path = "{}{}/{}".format(location_response['parentUri'], path, location_response['version'])
             fs = GCSFileSystem(location_response['accessToken'], "read_only")
-            return fs.read_parquet(gcs_path, use_pandas_metadata=True).to_pandas()
+            return fs.read_parquet(gcs_path)
 
 
