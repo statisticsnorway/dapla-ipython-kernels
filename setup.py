@@ -21,7 +21,7 @@ DEPENDENCIES = [
     'notebook>=4.2'
     'tornado>=4'
     'gcsfs'
-    'pyarrow'
+    'pyarrow>=0.17.*'
     'pandas'
     'google-auth>=1.2'
     'google-auth-oauthlib'
