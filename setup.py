@@ -15,6 +15,10 @@ def read(filename):
 
 DEPENDENCIES = [
     'ipython>=4.0.2'
+    'pyspark'
+    'jupyterhub'
+    'oauthenticator'
+    'jwt'
     'requests'
     'responses'
     'ipykernel>=4.2.2'

@@ -1,5 +1,5 @@
 from unittest.mock import MagicMock
-from services.gcs import GCSConnector
+from dapla.services.gcs import GCSConnector
 import unittest
 
 class GCSConnectorTest(unittest.TestCase):

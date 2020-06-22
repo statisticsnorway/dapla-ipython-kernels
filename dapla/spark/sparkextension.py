@@ -1,11 +1,10 @@
 import os
-import requests
 import jwt
 import time
 import json
 from pyspark import SparkContext
 from pyspark.sql import DataFrame, DataFrameReader, DataFrameWriter, SparkSession
-from jupyterhub.services.auth import HubAuth
+from ..jupyterextensions.authextension import AuthClient, AuthError
 
 """
 This extension will overload the spark session object (spark) with a method called ``path``.
@@ -23,7 +22,7 @@ The ``path`` method will ensure that an access token is (re)loaded (if necessary
 """
 
 
-def load_extensions(read_hook= None, write_hook= None):
+def load_extensions():
     DataFrameReader.path = namespace_read
     DataFrameWriter.path = namespace_write
     DataFrame.printDocTemplate = print_doc
@@ -78,7 +77,7 @@ def get_session():
     session = SparkSession._instantiatedSession
     if should_reload_token(session.sparkContext.getConf()):
         # Fetch new access token
-        update_tokens()
+        SparkContext._active_spark_context._conf.set("spark.ssb.access", AuthClient.get_access_token())
     return session
 
 
@@ -95,25 +94,3 @@ def should_reload_token(conf):
         return False
     else:
         return True
-
-
-def update_tokens():
-    # Helps getting the correct ssl configs
-    hub = HubAuth()
-    response = requests.get(os.environ['JUPYTERHUB_HANDLER_CUSTOM_AUTH_URL'],
-                            headers={
-                                'Authorization': 'token %s' % hub.api_token
-                            }, cert=(hub.certfile, hub.keyfile), verify=hub.client_ca, allow_redirects=False)
-    if response.status_code == 200:
-        SparkContext._active_spark_context._conf.set("spark.ssb.access", response.json()['access_token'])
-    else:
-        raise AuthError
-
-
-class AuthError(Exception):
-    """This exception class is used when the communication with the custom auth handler fails.
-    This is normally due to stale auth session."""
-
-    def print_warning(self):
-        from IPython.core.display import display, HTML
-        display(HTML('Your session has timed out. Please <a href="/hub/login">log in</a> to continue.'))

@@ -1,4 +1,4 @@
-from services.clients import DataAccessClient, DataAccessError
+from dapla.services.clients import DataAccessClient, DataAccessError
 import responses
 import unittest
 

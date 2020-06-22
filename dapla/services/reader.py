@@ -19,7 +19,7 @@ class DataSourceReader:
         """
         self._client = DataAccessClient(user_token, data_access_url)
 
-    def read(self, path):
+    def read(self, path, columns=None):
         # Get full path to latest version in GCS bucket
         location_response = self._client.read_location(path)
         if not location_response['accessAllowed']:
@@ -27,6 +27,6 @@ class DataSourceReader:
         else:
             gcs_path = "{}{}/{}".format(location_response['parentUri'], path, location_response['version'])
             fs = GCSFileSystem(location_response['accessToken'], "read_only")
-            return fs.read_parquet(gcs_path)
+            return fs.read_parquet(gcs_path, columns=columns)
 
 

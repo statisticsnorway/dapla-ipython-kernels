@@ -3,6 +3,7 @@ Custom GenericOAuthenticator extension
 """
 from oauthenticator.generic import GenericOAuthenticator
 
+
 # Pre-Spawn custom class to retrieve user access token
 class EnvGenericOAuthenticator(GenericOAuthenticator):
 
