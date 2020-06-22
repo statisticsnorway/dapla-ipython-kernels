@@ -1,4 +1,4 @@
-from services.reader import DataAccessClient, DataSourceReader
+from dapla.services.reader import DataAccessClient, DataSourceReader
 import unittest
 import responses
 
