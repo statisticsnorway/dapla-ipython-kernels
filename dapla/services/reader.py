@@ -31,7 +31,15 @@ class DataSourceReader:
     def details(self, path):
         fs, gcs_path = self._get_fs(path)
         import pandas as pd
-        return pd.DataFrame(list(map(lambda o: [o['size'], o['name']], fs.listdir(gcs_path, True))))
+        return pd.DataFrame(list(map(DataSourceReader._file_item(gcs_path), fs.listdir(gcs_path, True))))
+
+    @staticmethod
+    def _file_item(gcs_path):
+        return lambda o: {'Size': o['size'], 'Name': DataSourceReader._trimmed_name(gcs_path, o)}
+
+    @staticmethod
+    def _trimmed_name(gcs_path, o):
+        return o['name'].lstrip(o['bucket']).lstrip(gcs_path)
 
     def read(self, path, columns=None, to_pandas=True, **kwargs):
         fs, gcs_path = self._get_fs(path)

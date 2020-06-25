@@ -6,23 +6,23 @@ from dapla.services.writer import DataSourceWriter
 
 
 def read_pandas(path):
-    reader = DataSourceReader(AuthClient.get_access_token(), os.environ['DATA_ACCESS_URL'],  os.environ['CATALOG_URL'])
+    reader = DataSourceReader(AuthClient.get_access_token, os.environ['DATA_ACCESS_URL'],  os.environ['CATALOG_URL'])
     return reader.read(path)
 
 
 def show(path):
-    reader = DataSourceReader(AuthClient.get_access_token(), os.environ['DATA_ACCESS_URL'],  os.environ['CATALOG_URL'])
+    reader = DataSourceReader(AuthClient.get_access_token, os.environ['DATA_ACCESS_URL'],  os.environ['CATALOG_URL'])
     return reader.list(path)
 
 
 def details(path):
-    reader = DataSourceReader(AuthClient.get_access_token(), os.environ['DATA_ACCESS_URL'],  os.environ['CATALOG_URL'])
+    reader = DataSourceReader(AuthClient.get_access_token, os.environ['DATA_ACCESS_URL'],  os.environ['CATALOG_URL'])
     return reader.details(path)
 
 
 def write_pandas(df, path, **option_kwargs):
     writer = DataSourceWriter(
-        AuthClient.get_access_token(),
+        AuthClient.get_access_token,
         os.environ['DATA_ACCESS_URL'],
         os.environ['METADATA_PUBLISHER_URL'],
         os.environ['METADATA_PUBLISHER_PROJECT_ID'],

@@ -44,7 +44,7 @@ setup(
     long_description=read("README.md"),
     long_description_content_type="text/markdown",
 
-    packages=find_packages(exclude=('tests',)),
+    packages=find_packages(exclude=('tests', 'examples',)),
 
     install_requires=DEPENDENCIES,
 
