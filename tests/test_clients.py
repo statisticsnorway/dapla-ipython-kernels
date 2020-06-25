@@ -15,7 +15,7 @@ class ClientsTest(unittest.TestCase):
         }
         responses.add(responses.POST, 'http://mock.no/rpc/DataAccessService/readLocation',
                       json=json_response, status=200)
-        client = DataAccessClient('mock-user-token', 'http://mock.no/')
+        client = DataAccessClient(lambda: 'mock-user-token', 'http://mock.no/')
         location = client.read_location('/user/test')
         assert location['parentUri'] == 'gs://ssb-data-test'
 
@@ -24,7 +24,7 @@ class ClientsTest(unittest.TestCase):
         responses.add(responses.POST, 'http://mock.no/rpc/DataAccessService/readLocation',
                       json={'error': 'not found'}, status=404)
         with self.assertRaisesRegex(DataAccessError, 'Fant ikke datasett'):
-            client = DataAccessClient('mock-user-token', 'http://mock.no/')
+            client = DataAccessClient(lambda: 'mock-user-token', 'http://mock.no/')
             client.read_location('/user/test')
 
 
