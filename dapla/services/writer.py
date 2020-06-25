@@ -63,7 +63,6 @@ class DataSourceWriter:
             #    from_pandas_kwargs["preserve_index"] = index
             table = pyarrow.Table.from_pandas(df, preserve_index=True, **from_pandas_kwargs)
             with fs.open("{}/{}.parquet".format(gcs_path, self.guid()), mode="wb") as buffer:
-                print("Write to: " + gcs_path)
                 pyarrow.parquet.write_table(
                     table,
                     buffer,

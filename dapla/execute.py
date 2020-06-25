@@ -28,4 +28,4 @@ def write_pandas(df, path, **option_kwargs):
         os.environ['METADATA_PUBLISHER_PROJECT_ID'],
         os.environ['METADATA_PUBLISHER_TOPIC_NAME']
     )
-    writer.write(df, path, option_kwargs)
+    writer.write(df, path, **option_kwargs)
