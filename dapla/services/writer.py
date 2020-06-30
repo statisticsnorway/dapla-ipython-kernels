@@ -43,37 +43,50 @@ class DataSourceWriter:
         version = kwargs.pop("version", self._current_milli_time())
         valuation = kwargs.pop("valuation")
         state = kwargs.pop("state")
+
         location_response = self._data_access_client.write_location(path, version, valuation, state)
+        fs, gcs_path = self._get_fs(location_response, path, version)
+        pandas.io.parquet.BaseImpl.validate_dataframe(df)
+
+        # Write metadata file
+        with fs.open(gcs_path + "/.dataset-meta.json", mode="wb") as buffer:
+            valid_metadata = base64.b64decode(location_response["validMetadataJson"])
+            buffer.write(valid_metadata)
+
+        # Transfom and write pandas dataframe
+        from_pandas_kwargs = {"schema": kwargs.pop("schema", None)}
+        #if index is not None:
+        #    from_pandas_kwargs["preserve_index"] = index
+        table = pyarrow.Table.from_pandas(df, preserve_index=True, **from_pandas_kwargs)
+        with fs.open("{}/{}.parquet".format(gcs_path, self.guid()), mode="wb") as buffer:
+            pyarrow.parquet.write_table(
+                table,
+                buffer,
+                compression="snappy",
+                coerce_timestamps="ms",
+                **kwargs,
+            )
+        # Write metadata signature file
+        with fs.open(gcs_path + "/.dataset-meta.json.sign", mode="wb") as buffer:
+            valid_metadata = base64.b64decode(location_response["metadataSignature"])
+            buffer.write(valid_metadata)
+
+        # Publish metadata signature file created event, this will be used for validation and signals a "commit" of metadata
+        self._metadata_publisher_client.data_changed(gcs_path + "/.dataset-meta.json.sign")
+
+    def _get_fs(self, location_response, path, version):
         if not location_response['accessAllowed']:
             raise DataAccessError("Din bruker har ikke tilgang")
-        else:
+        parent_uri = location_response['parentUri']
+        if parent_uri.startswith('gs:'):
             gcs_path = "{}{}/{}".format(location_response['parentUri'], path, version)
             fs = GCSFileSystem(location_response['accessToken'], "read_write")
-
-            pandas.io.parquet.BaseImpl.validate_dataframe(df)
-
-            # Write metadata file
-            with fs.open(gcs_path + "/.dataset-meta.json", mode="wb") as buffer:
-                valid_metadata = base64.b64decode(location_response["validMetadataJson"])
-                buffer.write(valid_metadata)
-
-            # Transfom and write pandas dataframe
-            from_pandas_kwargs = {"schema": kwargs.pop("schema", None)}
-            #if index is not None:
-            #    from_pandas_kwargs["preserve_index"] = index
-            table = pyarrow.Table.from_pandas(df, preserve_index=True, **from_pandas_kwargs)
-            with fs.open("{}/{}.parquet".format(gcs_path, self.guid()), mode="wb") as buffer:
-                pyarrow.parquet.write_table(
-                    table,
-                    buffer,
-                    compression="snappy",
-                    coerce_timestamps="ms",
-                    **kwargs,
-                )
-            # Write metadata signature file
-            with fs.open(gcs_path + "/.dataset-meta.json.sign", mode="wb") as buffer:
-                valid_metadata = base64.b64decode(location_response["metadataSignature"])
-                buffer.write(valid_metadata)
-
-            # Publish metadata signature file created event, this will be used for validation and signals a "commit" of metadata
-            self._metadata_publisher_client.data_changed(gcs_path + "/.dataset-meta.json.sign")
+            return fs, gcs_path
+        elif parent_uri.startswith('file:'):
+            gcs_path = "{}{}/{}".format(parent_uri.lstrip('file:').replace('//', ''), path, version)
+            # Use pandas helper method to get fs
+            from pandas.io.common import get_filepath_or_buffer
+            file_obj_or_path, _, _, should_close = get_filepath_or_buffer(gcs_path)
+            return file_obj_or_path, gcs_path
+        else:
+            raise DataAccessError("Unknown file scheme: " + parent_uri)

@@ -57,7 +57,14 @@ class DataSourceReader:
         location_response = self._data_access_client.read_location(path)
         if not location_response['accessAllowed']:
             raise DataAccessError("Din bruker har ikke tilgang")
-        else:
+
+        parent_uri = location_response['parentUri']
+        if parent_uri.startswith('gs:'):
             fs = GCSFileSystem(location_response['accessToken'], "read_only")
-            gcs_path = "{}{}/{}".format(location_response['parentUri'], path, location_response['version'])
+            gcs_path = "{}{}/{}".format(parent_uri, path, location_response['version'])
             return fs, gcs_path
+        elif parent_uri.startswith('file:'):
+            gcs_path = "{}{}/{}".format(parent_uri.lstrip('file:').replace('//', ''), path, location_response['version'])
+            return None, gcs_path
+        else:
+            raise DataAccessError("Unknown file scheme: " + parent_uri)
