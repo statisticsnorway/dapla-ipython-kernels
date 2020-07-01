@@ -73,6 +73,9 @@ class MetadataPublisherClient(AbstractClient):
 
     def data_changed(self, dataset_uri):
         publisher_url = self._base_url + '/rpc/MetadataDistributorService/dataChanged'
+        if dataset_uri.startswith('/'):
+            # Metadata publisher uses file scheme
+            dataset_uri = 'file://' + dataset_uri
         request = {
             "projectId": self._project_id,
             "topicName": self._topic_name,
