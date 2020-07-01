@@ -48,4 +48,4 @@ class WriterTest(unittest.TestCase):
                                   'project-bip',
                                   'topic-bip'
                                   )
-        writer.write(table, '/output', valuation="INTERNAL", state="INPUT", version="1")
+        writer.write(table, '/output/dataset', valuation="INTERNAL", state="INPUT")

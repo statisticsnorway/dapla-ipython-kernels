@@ -1,10 +1,10 @@
 from .clients import DataAccessClient, DataAccessError, MetadataPublisherClient
 from .gcs import GCSFileSystem
+from pathlib import Path
 import pyarrow.parquet
 import base64
 # import utils to register the pyarrow extension types
 import pandas.core.arrays._arrow_utils  # noqa
-
 
 class DataSourceWriter:
     """
@@ -86,6 +86,8 @@ class DataSourceWriter:
             gcs_path = "{}{}/{}".format(parent_uri.lstrip('file:').replace('//', ''), path, version)
             # Create anonymous class to wrap Python's build-in open() function to open a file
             fs = type("", (), dict(open=lambda f, mode: open(f, mode)))
+            # Ensure that directory exists
+            Path(gcs_path).mkdir(parents=True, exist_ok=True)
             return fs, gcs_path
         else:
             raise DataAccessError("Unknown file scheme: " + parent_uri)
