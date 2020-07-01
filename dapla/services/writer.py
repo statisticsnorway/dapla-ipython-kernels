@@ -84,9 +84,8 @@ class DataSourceWriter:
             return fs, gcs_path
         elif parent_uri.startswith('file:'):
             gcs_path = "{}{}/{}".format(parent_uri.lstrip('file:').replace('//', ''), path, version)
-            # Use pandas helper method to get fs
-            from pandas.io.common import get_filepath_or_buffer
-            file_obj_or_path, _, _, should_close = get_filepath_or_buffer(gcs_path)
-            return file_obj_or_path, gcs_path
+            # Create anonymous class to wrap Python's build-in open() function to open a file
+            fs = type("", (), dict(open=lambda f, mode: open(f, mode)))
+            return fs, gcs_path
         else:
             raise DataAccessError("Unknown file scheme: " + parent_uri)
