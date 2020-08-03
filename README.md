@@ -2,6 +2,10 @@
 Python module for use within Jupyter notebooks. It contains kernel extensions for integrating with Apache Spark, 
 Google Cloud Storage and custom dapla services.
 
+[![PyPI version](https://img.shields.io/pypi/v/ssb-ipython-kernels.svg)](https://pypi.python.org/pypi/ssb-ipython-kernels/)
+[![Status](https://img.shields.io/pypi/status/ssb-ipython-kernels.svg)](https://pypi.python.org/pypi/ssb-ipython-kernels/)
+[![License](https://img.shields.io/pypi/l/ssb-ipython-kernels.svg)](https://pypi.python.org/pypi/ssb-ipython-kernels/)
+
 ## Getting Started
 
 Install the module from pip:
