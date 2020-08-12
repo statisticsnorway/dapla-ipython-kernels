@@ -26,7 +26,9 @@ class DataSourceReader:
 
     def list(self, path):
         import pandas as pd
-        return pd.DataFrame(self._catalog_client.list(path)['entries'])
+        df = pd.DataFrame(self._catalog_client.list(path)['entries'])
+        df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
+        return df
 
     def details(self, path):
         fs, gcs_path = self._get_fs(path)
