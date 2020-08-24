@@ -88,6 +88,22 @@ class MetadataPublisherClient(AbstractClient):
         handle_error_codes(response)
 
 
+class DatasetDocClient(AbstractClient):
+
+    def get_doc_template(self, spark_schema, use_simple):
+        request_url = self._base_url + '/rpc/DocTemplateService/generate'
+        request = {
+            "schema": spark_schema,
+            "simple": use_simple
+        }
+        response = requests.post(request_url, json=request,
+                                 headers={
+                                     'Authorization': 'Bearer %s' % self._user_token_provider()
+                                 }, allow_redirects=False)
+        handle_error_codes(response)
+        return response.json()
+
+
 def handle_error_codes(response):
     if response.status_code == 401:
         raise DataAccessError("Feil med tilgang til tjenesten", response.text)
