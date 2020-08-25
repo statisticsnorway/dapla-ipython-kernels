@@ -99,7 +99,7 @@ class DaplaDocumentationMagics(Magics):
                 ds.doc = json.loads(f.read())
         else:
             # Generate doc from template and prepare file
-            ds.doc = json.loads(self._doc_template_provider(ds, False))
+            ds.doc = self._doc_template_provider(ds.schema.json(), False)
             with open(fname, 'w', encoding="utf-8") as f:
                 json.dump(ds.doc, f)
 

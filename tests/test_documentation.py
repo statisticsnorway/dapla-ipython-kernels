@@ -2,6 +2,7 @@ import responses
 import unittest
 from unittest.mock import MagicMock
 from io import StringIO
+from os.path import dirname
 
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType, StructField, StringType
@@ -42,14 +43,15 @@ class DaplaDocumentationMagicsTest(unittest.TestCase):
     def test_generate_doc_template(self):
         responses.add(responses.POST, 'http://mock.no/doc/template',
                       json=doc_template, status=200)
+        output_file = "{}/output/docs/mockfile.json".format(dirname(__file__))
         # Mock that the user inputs a file name
-        self._magic.shell.ev = MagicMock(return_value="output/docs/mockfileinput.json")
+        self._magic.shell.ev = MagicMock(return_value=output_file)
         # Run the magic
         self._magic.document('ds')
         # Check that the user was asked for file input
         self._magic.shell.ev.assert_called_with('input("Enter filename where the documentation should be stored")')
         # Check that cell content was updated
-        self._magic.shell.set_next_input.assert_called_with('%document -f output/docs/mockfileinput.json ds', replace=True)
+        self._magic.shell.set_next_input.assert_called_with('%document -f {} ds'.format(output_file), replace=True)
         # Capture the display output
         captor = StringIO()
         print(*self._magic.display.call_args[0], file=captor, flush=True)
