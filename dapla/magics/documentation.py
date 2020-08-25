@@ -5,7 +5,6 @@ from __future__ import print_function
 from IPython.core.magic import (Magics, magics_class, line_magic)
 from IPython.core.error import UsageError, StdinNotImplementedError
 import os
-import io
 import json
 from pyspark.sql import DataFrame
 import ipywidgets as widgets
@@ -14,7 +13,7 @@ from ..jupyterextensions.authextension import AuthClient
 
 
 @staticmethod
-def doc_template_provider():
+def default_doc_template_provider():
     doc_template_client = DatasetDocClient(AuthClient.get_access_token, os.environ['DOC_TEMPLATE_URL'])
     return doc_template_client.get_doc_template
 
@@ -101,7 +100,7 @@ class DaplaDocumentationMagics(Magics):
         else:
             # Generate doc from template and prepare file
             ds.doc = json.loads(self._doc_template_provider(ds, False))
-            with io.open(fname, 'w', encoding="utf-8") as f:
+            with open(fname, 'w', encoding="utf-8") as f:
                 json.dump(ds.doc, f)
 
         variable_titles = []
@@ -152,7 +151,7 @@ class DaplaDocumentationMagics(Magics):
         )
 
         def on_button_clicked(b):
-            with io.open(fname, 'w', encoding="utf-8") as f:
+            with open(fname, 'w', encoding="utf-8") as f:
                 json.dump(ds.doc, f)
 
         btn.on_click(on_button_clicked)
@@ -231,6 +230,6 @@ def load_ipython_extension(ipython):
     """
     # This class must then be registered with a manually created instance,
     # since its constructor has different arguments from the default:
-    magics = DaplaDocumentationMagics(ipython, doc_template_provider)
+    magics = DaplaDocumentationMagics(ipython, default_doc_template_provider())
     ipython.register_magics(magics)
 

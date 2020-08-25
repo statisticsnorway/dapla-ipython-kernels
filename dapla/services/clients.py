@@ -91,7 +91,7 @@ class MetadataPublisherClient(AbstractClient):
 class DatasetDocClient(AbstractClient):
 
     def get_doc_template(self, spark_schema, use_simple):
-        request_url = self._base_url + '/rpc/DocTemplateService/generate'
+        request_url = self._base_url + '/doc/template'
         request = {
             "schema": spark_schema,
             "simple": use_simple
