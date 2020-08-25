@@ -9,7 +9,6 @@ import io
 import json
 from pyspark.sql import DataFrame
 import ipywidgets as widgets
-from IPython.display import display, clear_output
 from ..services.clients import DatasetDocClient
 from ..jupyterextensions.authextension import AuthClient
 
@@ -36,6 +35,16 @@ class DaplaDocumentationMagics(Magics):
         if not fname.endswith('.json'):
             fname = fname + ".json"
         return fname
+
+    @staticmethod
+    def display(*objs):
+        from IPython.display import display
+        display(**objs)
+
+    @staticmethod
+    def clear_output():
+        from IPython.display import clear_output
+        clear_output()
 
     @line_magic
     def document(self, line):
@@ -80,10 +89,10 @@ class DaplaDocumentationMagics(Magics):
                 ans = False
 
             if ans is False:
-                clear_output()
+                self.clear_output()
                 return
 
-        clear_output()
+        self.clear_output()
 
         file_exists = os.path.isfile(fname)
         if file_exists:
@@ -134,12 +143,12 @@ class DaplaDocumentationMagics(Magics):
             widgets.Box([widgets.Label(value='Name'), self.create_widget(ds.doc, 'name')], layout=form_item_layout),
             widgets.Box([widgets.Label(value='Description'), self.create_widget(ds.doc, 'description')],
                         layout=form_item_layout)
-        ], layout=widgets.Layout(
-            display='flex',
-            flex_flow='column',
-            align_items='stretch',
-            width='50%'
-        )
+            ], layout=widgets.Layout(
+                display='flex',
+                flex_flow='column',
+                align_items='stretch',
+                width='50%'
+            )
         )
 
         def on_button_clicked(b):
@@ -148,7 +157,7 @@ class DaplaDocumentationMagics(Magics):
 
         btn.on_click(on_button_clicked)
 
-        display(widgets.HTML("<b>Dataset metadata</b>"), dataset_doc,
+        self.display(widgets.HTML("<b>Dataset metadata</b>"), dataset_doc,
                 widgets.HTML("<b>Instance variables</b>"), accordion,
                 btn, out)
 
