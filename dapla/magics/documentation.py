@@ -38,7 +38,7 @@ class DaplaDocumentationMagics(Magics):
     @staticmethod
     def display(*objs):
         from IPython.display import display
-        display(**objs)
+        display(*objs)
 
     @staticmethod
     def clear_output():
@@ -96,7 +96,7 @@ class DaplaDocumentationMagics(Magics):
         file_exists = os.path.isfile(fname)
         if file_exists:
             with open(fname, 'r') as f:
-                ds.doc = json.loads(f.read())
+                ds.doc = json.load(f)
         else:
             # Generate doc from template and prepare file
             ds.doc = self._doc_template_provider(ds.schema.json(), False)
