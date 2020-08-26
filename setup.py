@@ -34,7 +34,7 @@ DEPENDENCIES = [
 
 setup(
     name="ssb-ipython-kernels",
-    version="0.1.2",
+    version="0.1.3",
     url="https://github.com/statisticsnorway/dapla-ipython-kernels",
     license='MIT',
 
