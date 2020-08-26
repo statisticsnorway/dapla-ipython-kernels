@@ -29,6 +29,7 @@ DEPENDENCIES = [
     'pandas'
     'google-auth>=1.2'
     'google-auth-oauthlib'
+    'ipywidgets'
 ]
 
 setup(
