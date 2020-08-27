@@ -55,13 +55,15 @@ class DaplaDocumentationMagics(Magics):
         Options:
 
             -f <filename>: specify a file where the documentation is stored
+            -n : Documentation is not stored to file
         """
 
-        opts, args = self.parse_options(line, 'f:')
+        opts, args = self.parse_options(line, 'nf:')
         if not args:
             raise UsageError('Missing variable name.')
 
         fname = opts.get('f')
+        use_file_storage = 'n' not in opts
 
         try:
             ds = self.shell.user_ns[args]
@@ -71,13 +73,13 @@ class DaplaDocumentationMagics(Magics):
         if not isinstance(ds, DataFrame):
             raise UsageError("The variable '{}' is not a pyspark DataFrame".format(args))
 
-        if fname is None:
+        if fname is None and use_file_storage:
             fname = self.ensure_valid_filename(
                 self.shell.ev('input("Enter filename where the documentation should be stored")'))
             # Update the user input for future use
             contents = "%document -f {} {}".format(fname, line)
             self.shell.set_next_input(contents, replace=True)
-        else:
+        elif use_file_storage:
             fname = self.ensure_valid_filename(fname)
 
         if hasattr(ds, 'doc') and ds.doc is not None:
@@ -93,15 +95,19 @@ class DaplaDocumentationMagics(Magics):
 
         self.clear_output()
 
-        file_exists = os.path.isfile(fname)
-        if file_exists:
-            with open(fname, 'r') as f:
-                ds.doc = json.load(f)
+        if use_file_storage:
+            file_exists = os.path.isfile(fname)
+            if file_exists:
+                with open(fname, 'r') as f:
+                    ds.doc = json.load(f)
+            else:
+                # Generate doc from template and prepare file
+                ds.doc = self._doc_template_provider(ds.schema.json(), False)
+                with open(fname, 'w', encoding="utf-8") as f:
+                    json.dump(ds.doc, f)
         else:
-            # Generate doc from template and prepare file
+            # Generate doc from template
             ds.doc = self._doc_template_provider(ds.schema.json(), False)
-            with open(fname, 'w', encoding="utf-8") as f:
-                json.dump(ds.doc, f)
 
         variable_titles = []
         variable_forms = []
@@ -135,9 +141,6 @@ class DaplaDocumentationMagics(Magics):
         for i in range(len(variable_forms)):
             accordion.set_title(i, variable_titles[i])
 
-        btn = widgets.Button(description='Save to file', icon='file-code')
-
-        out = widgets.Output()
         dataset_doc = widgets.Box([
             widgets.Box([widgets.Label(value='Name'), self.create_widget(ds.doc, 'name')], layout=form_item_layout),
             widgets.Box([widgets.Label(value='Description'), self.create_widget(ds.doc, 'description')],
@@ -150,15 +153,20 @@ class DaplaDocumentationMagics(Magics):
             )
         )
 
+        display_objs = (widgets.HTML("<b>Dataset metadata</b>"), dataset_doc,
+                          widgets.HTML("<b>Instance variables</b>"), accordion)
+
         def on_button_clicked(b):
             with open(fname, 'w', encoding="utf-8") as f:
                 json.dump(ds.doc, f)
 
-        btn.on_click(on_button_clicked)
-
-        self.display(widgets.HTML("<b>Dataset metadata</b>"), dataset_doc,
-                widgets.HTML("<b>Instance variables</b>"), accordion,
-                btn, out)
+        if use_file_storage:
+            btn = widgets.Button(description='Save to file', icon='file-code')
+            btn.on_click(on_button_clicked)
+            out = widgets.Output()
+            self.display(*display_objs, btn, out)
+        else:
+            self.display(*display_objs)
 
     def create_widget(self, binding, key):
         if isinstance(binding[key], str):
