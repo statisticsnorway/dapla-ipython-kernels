@@ -93,8 +93,8 @@ class DatasetDocClient(AbstractClient):
     def get_doc_template(self, spark_schema, use_simple):
         request_url = self._base_url + '/doc/template'
         request = {
-            "schema": spark_schema,
-            "simple": use_simple
+            "sparkSchemaJson": spark_schema,
+            "useSimpleFiltering": use_simple
         }
         response = requests.post(request_url, json=request,
                                  headers={

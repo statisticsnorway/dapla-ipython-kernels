@@ -52,6 +52,13 @@ class DaplaDocumentationMagicsTest(unittest.TestCase):
         self._magic.shell.ev.assert_called_with('input("Enter filename where the documentation should be stored")')
         # Check that cell content was updated
         self._magic.shell.set_next_input.assert_called_with('%document -f {} ds'.format(output_file), replace=True)
+
+    @responses.activate
+    def test_generate_doc_template_no_file(self):
+        responses.add(responses.POST, 'http://mock.no/doc/template',
+                      json=doc_template, status=200)
+        # Run the magic
+        self._magic.document('-n ds')
         # Capture the display output
         captor = StringIO()
         print(*self._magic.display.call_args[0], file=captor, flush=True)
@@ -103,8 +110,6 @@ layout=Layout(display='flex', flex_flow='row', justify_content='space-between'))
 Box(children=(Label(value='Selectionvalue'), \
 Dropdown(index=2, options=(('name1', 'id1'), ('name2', 'id2'), ('name3', 'id3')), value='id3')), \
 layout=Layout(display='flex', flex_flow='row', justify_content='space-between'))), \
-layout=Layout(align_items='stretch', display='flex', flex_flow='column', width='50%')),), _titles={'0': 'Iv1'}) \
-Button(description='Save to file', icon='file-code', style=ButtonStyle()) \
-Output()\n"
+layout=Layout(align_items='stretch', display='flex', flex_flow='column', width='50%')),), _titles={'0': 'Iv1'})\n"
 
 
