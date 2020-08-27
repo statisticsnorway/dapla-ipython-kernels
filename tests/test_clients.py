@@ -4,8 +4,6 @@ import unittest
 
 
 class ClientsTest(unittest.TestCase):
-    # skip because write to file fails on CI server
-    @unittest.skip
     @responses.activate
     def test_data_access_client(self):
         json_response = {
