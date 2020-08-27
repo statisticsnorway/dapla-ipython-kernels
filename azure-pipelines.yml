@@ -24,11 +24,11 @@ steps:
     pip install -r requirements.txt
   displayName: 'Install dependencies'
 
-- script: pip install tox
-  displayName: 'Install Tox'
-
-- script: tox -e py
-  displayName: 'Run Tox'
+- script: |
+    pip install pytest
+    pip install pytest-cov
+    pytest tests --doctest-modules --junitxml=junit/test-results.xml --cov=. --cov-report=xml --cov-report=html
+  displayName: 'Test with pytest'
 
 - task: PublishTestResults@2
   condition: succeededOrFailed()
