@@ -1,4 +1,4 @@
-from .clients import DataAccessClient, DataAccessError, MetadataPublisherClient
+from .clients import DataAccessClient, DataAccessError, MetadataPublisherClient, CatalogClient
 from .gcs import GCSFileSystem
 from pathlib import Path
 import pyarrow.parquet
@@ -17,17 +17,23 @@ class DataSourceWriter:
             metadata_publisher_url=None,
             metadata_publisher_project_id=None,
             metadata_publisher_topic_name=None,
+            catalog_url=None,
     ):
         """
         Args:
             user_token (Optional(str)): The OAuth 2.0 access token. When user_token=None,
                 no authentication is performed, and you can only access public data
             data_access_url (str): Endpoint to dapla's data access service
+            metadata_publisher_url (str): Endpoint to dapla's data metadata publisher service
+            metadata_publisher_project_id (str): Project ID used by metadata publisher service
+            metadata_publisher_topic_name (str): Topic name used by metadata publisher service
+            catalog_url (str): Endpoint to dapla's data catalog service
         """
         self._data_access_client = DataAccessClient(user_token_provider, data_access_url)
         self._metadata_publisher_client = MetadataPublisherClient(
             user_token_provider, metadata_publisher_url,
             metadata_publisher_project_id, metadata_publisher_topic_name)
+        self._catalog_client = CatalogClient(user_token_provider, catalog_url)
 
     @staticmethod
     def _current_milli_time():
@@ -73,6 +79,12 @@ class DataSourceWriter:
 
         # Publish metadata signature file created event, this will be used for validation and signals a "commit" of metadata
         self._metadata_publisher_client.data_changed(gcs_path + "/.dataset-meta.json.sign")
+
+        # Update catalog
+        self._catalog_client.write_dataset(path, version, valuation, state,
+                                           location_response['parentUri'],
+                                           location_response["validMetadataJson"],
+                                           location_response["metadataSignature"])
 
     def _get_fs(self, location_response, path, version):
         if not location_response['accessAllowed']:

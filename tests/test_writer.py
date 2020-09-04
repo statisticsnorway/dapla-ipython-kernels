@@ -22,7 +22,8 @@ class WriterTest(unittest.TestCase):
                                   'https://data-access.staging-bip-app.ssb.no/',
                                   'https://metadata-distributor.staging-bip-app.ssb.no',
                                   'staging-bip',
-                                  'metadata-distributor-dataset-updates'
+                                  'metadata-distributor-dataset-updates',
+                                  'https://catalog.staging-bip-app.ssb.no',
                                   )
         writer.write(table, '/felles/bjornandre/python/test1', valuation="INTERNAL", state="INPUT")
 
@@ -41,11 +42,14 @@ class WriterTest(unittest.TestCase):
                       json=json_response, status=200)
         responses.add(responses.POST, 'http://mock.no/rpc/MetadataDistributorService/dataChanged',
                       status=200)
+        responses.add(responses.POST, 'http://mock.no/catalog/write',
+                      status=200)
 
         writer = DataSourceWriter(lambda: 'mock-user-token',
                                   'http://mock.no/',
                                   'http://mock.no/',
                                   'project-bip',
-                                  'topic-bip'
+                                  'topic-bip',
+                                  'http://mock.no/'
                                   )
         writer.write(table, '/output/dataset', valuation="INTERNAL", state="INPUT")

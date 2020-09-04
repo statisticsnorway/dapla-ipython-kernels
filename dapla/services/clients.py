@@ -24,6 +24,26 @@ class CatalogClient(AbstractClient):
         handle_error_codes(response)
         return response.json()
 
+    def write_dataset(self, path, version, valuation, state, parentUri, datasetMetaBytes, datasetMetaSignatureBytes):
+        catalog_url = self._base_url + '/catalog/write'
+        request = {
+            "dataset": {
+                "id": {
+                    "path": path,
+                    "timestamp": version
+                },
+                "valuation": valuation,
+                "state": state,
+                "parentUri": parentUri
+            },
+            "datasetMetaBytes": datasetMetaBytes,
+            "datasetMetaSignatureBytes": datasetMetaSignatureBytes
+        }
+        response = requests.post(catalog_url, json=request,
+                                 headers={
+                                     'Authorization': 'Bearer %s' % self._user_token_provider()
+                                 }, allow_redirects=False)
+        handle_error_codes(response)
 
 class DataAccessClient(AbstractClient):
 
@@ -93,7 +113,8 @@ class DatasetDocClient(AbstractClient):
     def get_doc_template(self, spark_schema, use_simple):
         request_url = self._base_url + '/doc/template'
         request = {
-            "sparkSchemaJson": spark_schema,
+            "schema": spark_schema,
+            "schemaType": "SPARK",
             "useSimpleFiltering": use_simple
         }
         response = requests.post(request_url, json=request,
