@@ -26,6 +26,7 @@ def write_pandas(df, path, **option_kwargs):
         os.environ['DATA_ACCESS_URL'],
         os.environ['METADATA_PUBLISHER_URL'],
         os.environ['METADATA_PUBLISHER_PROJECT_ID'],
-        os.environ['METADATA_PUBLISHER_TOPIC_NAME']
+        os.environ['METADATA_PUBLISHER_TOPIC_NAME'],
+        os.environ['CATALOG_URL']
     )
     writer.write(df, path, **option_kwargs)
