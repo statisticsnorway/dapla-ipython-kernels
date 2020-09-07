@@ -12,12 +12,6 @@ from ..services.clients import DatasetDocClient
 from ..jupyterextensions.authextension import AuthClient
 
 
-@staticmethod
-def default_doc_template_provider():
-    doc_template_client = DatasetDocClient(AuthClient.get_access_token, os.environ['DOC_TEMPLATE_URL'])
-    return doc_template_client.get_doc_template
-
-
 @magics_class
 class DaplaDocumentationMagics(Magics):
     """Magics related to documentation management (loading, saving, editing, ...)."""
@@ -236,8 +230,9 @@ def load_ipython_extension(ipython):
     can be loaded via `%load_ext module.path` or be configured to be
     autoloaded by IPython at startup time.
     """
-    # This class must then be registered with a manually created instance,
+    doc_template_client = DatasetDocClient(AuthClient.get_access_token, os.environ['DOC_TEMPLATE_URL'])
+    # This class must be registered with a manually created instance,
     # since its constructor has different arguments from the default:
-    magics = DaplaDocumentationMagics(ipython, default_doc_template_provider())
+    magics = DaplaDocumentationMagics(ipython, doc_template_client.get_doc_template)
     ipython.register_magics(magics)
 
