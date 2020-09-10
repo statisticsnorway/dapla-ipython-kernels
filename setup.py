@@ -24,7 +24,7 @@ DEPENDENCIES = [
     'ipykernel>=4.2.2'
     'notebook>=4.2'
     'tornado>=4'
-    'gcsfs'
+    'gcsfs==0.6.2'
     'pyarrow>=0.17.*'
     'pandas'
     'google-auth>=1.2'
