@@ -71,6 +71,10 @@ class DaplaDocumentationMagicsTest(unittest.TestCase):
 doc_template = {
     "name": "ds name",
     "description": "ds description",
+    'unitType': {'concept-type': 'UnitType',
+                 'selected-id': 'UnitType_DUMMY',
+                 'candidates': [
+                     {'id': 'UnitType_DUMMY', 'name': 'UnitType_DUMMY'}]},
     "instanceVariables": [
         {
             "name": "iv1",
@@ -100,16 +104,18 @@ expected_widgets = "HTML(value='<b>Dataset metadata</b>') \
 Box(children=(Box(children=(Label(value='Name'), Text(value='ds name')), \
 layout=Layout(display='flex', flex_flow='row', justify_content='space-between')), \
 Box(children=(Label(value='Description'), Textarea(value='ds description')), \
+layout=Layout(display='flex', flex_flow='row', justify_content='space-between')), \
+Box(children=(Label(value='UnitType'), Dropdown(options=(('UnitType_DUMMY', 'UnitType_DUMMY'),), value='UnitType_DUMMY')), \
 layout=Layout(display='flex', flex_flow='row', justify_content='space-between'))), \
 layout=Layout(align_items='stretch', display='flex', flex_flow='column', width='50%')) \
 HTML(value='<b>Instance variables</b>') \
 Accordion(children=(Box(children=(Box(children=(Label(value='Description'), \
 Textarea(value='iv1descr')), layout=Layout(display='flex', flex_flow='row', justify_content='space-between')), \
-Box(children=(Label(value='Checkboxvalue'), Checkbox(value=False, indent=False)), \
+Box(children=(Label(value='CheckboxValue'), Checkbox(value=False, indent=False)), \
 layout=Layout(display='flex', flex_flow='row', justify_content='space-between')), \
-Box(children=(Label(value='Enumvalue'), Dropdown(index=1, options=('VAL1', 'VAL2', 'VAL3'), value='VAL2')), \
+Box(children=(Label(value='EnumValue'), Dropdown(index=1, options=('VAL1', 'VAL2', 'VAL3'), value='VAL2')), \
 layout=Layout(display='flex', flex_flow='row', justify_content='space-between')), \
-Box(children=(Label(value='Selectionvalue'), \
+Box(children=(Label(value='SelectionValue'), \
 Dropdown(index=2, options=(('name1', 'id1'), ('name2', 'id2'), ('name3', 'id3')), value='id3')), \
 layout=Layout(display='flex', flex_flow='row', justify_content='space-between'))), \
 layout=Layout(align_items='stretch', display='flex', flex_flow='column', width='50%')),), _titles={'0': 'Iv1'})\n"

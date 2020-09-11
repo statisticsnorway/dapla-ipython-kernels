@@ -9,7 +9,7 @@ import json
 from pyspark.sql import DataFrame
 import ipywidgets as widgets
 from ..services.clients import DatasetDocClient
-from ..jupyterextensions.authextension import AuthClient
+from ..jupyterextensions.authextension import AuthClient, AuthError
 
 
 @magics_class
@@ -89,19 +89,23 @@ class DaplaDocumentationMagics(Magics):
 
         self.clear_output()
 
-        if use_file_storage:
-            file_exists = os.path.isfile(fname)
-            if file_exists:
-                with open(fname, 'r') as f:
-                    ds.doc = json.load(f)
+        try:
+            if use_file_storage:
+                file_exists = os.path.isfile(fname)
+                if file_exists:
+                    with open(fname, 'r') as f:
+                        ds.doc = json.load(f)
+                else:
+                    # Generate doc from template and prepare file
+                    ds.doc = self._doc_template_provider(ds.schema.json(), False)
+                    with open(fname, 'w', encoding="utf-8") as f:
+                        json.dump(ds.doc, f)
             else:
-                # Generate doc from template and prepare file
+                # Generate doc from template
                 ds.doc = self._doc_template_provider(ds.schema.json(), False)
-                with open(fname, 'w', encoding="utf-8") as f:
-                    json.dump(ds.doc, f)
-        else:
-            # Generate doc from template
-            ds.doc = self._doc_template_provider(ds.schema.json(), False)
+        except AuthError as err:
+            err.print_warning()
+            return
 
         variable_titles = []
         variable_forms = []
@@ -112,15 +116,18 @@ class DaplaDocumentationMagics(Magics):
             justify_content='space-between'
         )
 
+        def capitalize_with_camelcase(s):
+            return s[0].upper() + s[1:]
+
         for instanceVar in ds.doc['instanceVariables']:
-            variable_titles.append(instanceVar['name'].capitalize())
+            variable_titles.append(capitalize_with_camelcase(instanceVar['name']))
             form_items = []
 
             for key in instanceVar.keys():
                 if key == 'name':
                     continue
                 form_items.append(
-                    widgets.Box([widgets.Label(value=key.capitalize()), self.create_widget(instanceVar, key)],
+                    widgets.Box([widgets.Label(value=capitalize_with_camelcase(key)), self.create_widget(instanceVar, key)],
                                 layout=form_item_layout))
 
             variable_forms.append(widgets.Box(form_items, layout=widgets.Layout(
@@ -138,6 +145,8 @@ class DaplaDocumentationMagics(Magics):
         dataset_doc = widgets.Box([
             widgets.Box([widgets.Label(value='Name'), self.create_widget(ds.doc, 'name')], layout=form_item_layout),
             widgets.Box([widgets.Label(value='Description'), self.create_widget(ds.doc, 'description')],
+                        layout=form_item_layout),
+            widgets.Box([widgets.Label(value='UnitType'), self.create_widget(ds.doc, 'unitType')],
                         layout=form_item_layout)
             ], layout=widgets.Layout(
                 display='flex',
@@ -148,7 +157,7 @@ class DaplaDocumentationMagics(Magics):
         )
 
         display_objs = (widgets.HTML("<b>Dataset metadata</b>"), dataset_doc,
-                          widgets.HTML("<b>Instance variables</b>"), accordion)
+                        widgets.HTML("<b>Instance variables</b>"), accordion)
 
         def on_button_clicked(b):
             with open(fname, 'w', encoding="utf-8") as f:
