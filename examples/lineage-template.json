@@ -1,0 +1,49 @@
+{
+  "lineage": {
+    "name": "spark_schema",
+    "type": "structure",
+    "fields": [
+      {
+        "name": "kontonummer",
+        "type": "inherited",
+        "confidence": 0.9,
+        "sources": [
+          {
+            "field": "kontonummer",
+            "path": "/input/person",
+            "version": 123
+          },
+          {
+            "field": "kontonummer",
+            "path": "/input/konto",
+            "version": 123
+          }
+        ]
+      },
+      {
+        "name": "personidentifikator",
+        "type": "inherited",
+        "confidence": 0.9,
+        "sources": [
+          {
+            "field": "personidentifikator",
+            "path": "/input/person",
+            "version": 123
+          }
+        ]
+      },
+      {
+        "name": "innskudd",
+        "type": "inherited",
+        "confidence": 0.9,
+        "sources": [
+          {
+            "field": "innskudd",
+            "path": "/input/konto",
+            "version": 123
+          }
+        ]
+      }
+    ]
+  }
+}

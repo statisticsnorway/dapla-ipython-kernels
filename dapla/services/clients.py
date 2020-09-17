@@ -45,6 +45,7 @@ class CatalogClient(AbstractClient):
                                  }, allow_redirects=False)
         handle_error_codes(response)
 
+
 class DataAccessClient(AbstractClient):
 
     def read_location(self, path):
@@ -116,6 +117,26 @@ class DatasetDocClient(AbstractClient):
             "schema": spark_schema,
             "schemaType": "SPARK",
             "useSimpleFiltering": use_simple
+        }
+        response = requests.post(request_url, json=request,
+                                 headers={
+                                     'Authorization': 'Bearer %s' % self._user_token_provider()
+                                 }, allow_redirects=False)
+        handle_error_codes(response)
+        return response.json()
+
+    def get_lineage_template(self, output_schema, input_schema_map):
+        request_url = self._base_url + '/lineage/template'
+
+        def mapper(x):
+            return (x[0], {
+                "schema": x[1],
+                "schemaType": "SPARK",
+            })
+        request = {
+            "schema": output_schema,
+            "schemaType": "SPARK",
+            "dependencies": dict(map(mapper, input_schema_map.items())),
         }
         response = requests.post(request_url, json=request,
                                  headers={
