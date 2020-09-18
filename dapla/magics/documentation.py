@@ -49,15 +49,15 @@ class DaplaDocumentationMagics(Magics):
         Options:
 
             -f <filename>: specify a file where the documentation is stored
-            -n : Documentation is not stored to file
+            --nofile : Documentation is not stored to file
         """
 
-        opts, args = self.parse_options(line, 'nf:')
+        opts, args = self.parse_options(line, 'f:', 'nofile')
         if not args:
             raise UsageError('Missing variable name.')
 
         fname = opts.get('f')
-        use_file_storage = 'n' not in opts
+        use_file_storage = 'nofile' not in opts
 
         try:
             ds = self.shell.user_ns[args]
