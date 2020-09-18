@@ -125,18 +125,21 @@ class DatasetDocClient(AbstractClient):
         handle_error_codes(response)
         return response.json()
 
-    def get_lineage_template(self, output_schema, input_schema_map):
+    def get_lineage_template(self, output_schema, input_schema_map, use_simple=False):
         request_url = self._base_url + '/lineage/template'
 
         def mapper(x):
             return (x[0], {
-                "schema": x[1],
+                "schema": x[1]['schema'],
                 "schemaType": "SPARK",
+                "timestamp": x[1]['timestamp'],
+                "simpleLineage": use_simple,
             })
         request = {
-            "schema": output_schema,
+            "schema": output_schema['schema'],
+            "timestamp": output_schema['timestamp'],
             "schemaType": "SPARK",
-            "dependencies": dict(map(mapper, input_schema_map.items())),
+            "dependencies": [dict(map(mapper, input_schema_map.items()))],
         }
         response = requests.post(request_url, json=request,
                                  headers={

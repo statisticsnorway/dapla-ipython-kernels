@@ -2,11 +2,16 @@ from __future__ import print_function
 from IPython.core.magic import (Magics, magics_class, line_cell_magic, line_magic, cell_magic)
 from IPython.core.error import UsageError, StdinNotImplementedError
 import os
+import time
 import json
 from pyspark.sql import DataFrame
 import ipywidgets as widgets
 from ..services.clients import DatasetDocClient
 from ..jupyterextensions.authextension import AuthClient, AuthError
+
+
+def current_milli_time():
+    return int(round(time.time() * 1000))
 
 
 @magics_class
@@ -30,7 +35,7 @@ class DaplaLineageMagics(Magics):
             # Referenced schema can be added later
             self._input_datasets[path] = {}
         else:
-            self._input_datasets[path] = schema
+            self._input_datasets[path] = {"schema": schema, "timestamp": current_milli_time()}
 
     @line_magic
     def lineage_output(self, line):
@@ -42,7 +47,7 @@ class DaplaLineageMagics(Magics):
             # Referenced schema can be added later
             self._output_datasets[path] = {}
         else:
-            self._output_datasets[path] = schema
+            self._output_datasets[path] = {"schema": schema, "timestamp": current_milli_time()}
 
     @line_magic
     def lineage_tree(self, line):
@@ -50,14 +55,30 @@ class DaplaLineageMagics(Magics):
         print(u'Output datasets:\n |-- {}'.format('\n |-- '.join(self._output_datasets.keys())))
 
     @line_magic
+    def lineage_json(self, line):
+        opts, args = self.parse_options(line, '', 'path')
+        use_path = 'path' in opts
+        if use_path:
+            if args not in self._output_datasets.keys():
+                raise UsageError('Could not find path {} in output datasets'.format(args))
+            return self._lineage_template_provider(self._output_datasets[args], self._input_datasets)
+        elif not args:
+            raise UsageError('Missing dataset name.')
+        else:
+            ds = self.shell.user_ns[args]
+            output_schema = {"schema": ds.schema.json(), "timestamp": current_milli_time()}
+            return self._lineage_template_provider(output_schema, self._input_datasets)
+
+    @line_magic
     def lineage_fields(self, line):
-        opts, args = self.parse_options(line, 'nf:')
+        opts, args = self.parse_options(line, '')
         if not args:
             raise UsageError('Missing dataset name.')
         try:
             ds = self.shell.user_ns[args]
             # Generate lineage from template
-            ds.lineage = self._lineage_template_provider(ds.schema.json(), self._input_datasets)
+            output_schema = {"schema": ds.schema.json(), "timestamp": current_milli_time()}
+            ds.lineage = self._lineage_template_provider(output_schema, self._input_datasets)
         except KeyError:
             raise UsageError("Could not find dataset '{}'".format(args))
 
