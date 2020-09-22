@@ -5,7 +5,7 @@ from IPython import get_ipython
 def add_lineage(read_method):
     def wrapper(self, ns):
         ds = read_method(self, ns)
-        if ds is not None and lineage_enabled():
+        if lineage_enabled() and ds is not None and '*' not in ns:
             get_ipython().run_line_magic("lineage_input", "{} {}".format(ns, ds.schema.json()))
         return ds
     return wrapper
@@ -49,4 +49,4 @@ def add_lineage_option(write_method):
 
 
 def lineage_enabled():
-    return get_ipython().find_line_magic("document") is not None
+    return get_ipython().find_line_magic("lineage") is not None

@@ -75,7 +75,7 @@ class DaplaLineageMagics(Magics):
             return self._lineage_template_provider(output_schema, self._input_datasets)
 
     @line_magic
-    def lineage_fields(self, line):
+    def lineage(self, line):
         opts, args = self.parse_options(line, '')
         if not args:
             raise UsageError('Missing dataset name.')
