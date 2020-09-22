@@ -1,4 +1,5 @@
 from .documentation import DaplaDocumentationMagics
+from .lineage import DaplaLineageMagics
 
 
 def load_all(ipython):

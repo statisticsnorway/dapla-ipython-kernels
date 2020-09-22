@@ -1,10 +1,10 @@
 import os
 import jwt
 import time
-import json
 from pyspark import SparkContext
 from pyspark.sql import DataFrame, DataFrameReader, DataFrameWriter, SparkSession
 from ..jupyterextensions.authextension import AuthClient, AuthError
+from .decorators import add_lineage, add_lineage_option, add_doc_option
 
 """
 This extension will overload the spark session object (spark) with a method called ``path``.
@@ -43,6 +43,7 @@ def print_avro_schema(self, record_name="spark_schema", record_namespace=""):
     print(avro_schema.toString(True))
 
 
+@add_lineage
 def namespace_read(self, ns):
     try:
         return get_session().read.format("gsim").load(ns)
@@ -50,19 +51,12 @@ def namespace_read(self, ns):
         err.print_warning()
 
 
+@add_doc_option
+@add_lineage_option
 def namespace_write(self, ns):
     try:
         self._spark = get_session()
-        # Read doc from parent dataframe
-        if hasattr(self._df, 'doc'):
-            doc = self._df.doc
-            # doc can be either str or native json
-            if type(doc) is str:
-                self.format("gsim").option("dataset-doc", doc).save(ns)
-            else:
-                self.format("gsim").option("dataset-doc", json.dumps(doc, indent=2)).save(ns)
-        else:
-            self.format("gsim").save(ns)
+        self.format("gsim").save(ns)
     except AuthError as err:
         err.print_warning()
 

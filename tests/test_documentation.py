@@ -60,7 +60,7 @@ class DaplaDocumentationMagicsTest(unittest.TestCase):
         responses.add(responses.POST, 'http://mock.no/doc/template',
                       json=doc_template, status=200)
         # Run the magic
-        self._magic.document('-n ds')
+        self._magic.document('--nofile ds')
         # Capture the display output
         captor = StringIO()
         print(*self._magic.display.call_args[0], file=captor, flush=True)
