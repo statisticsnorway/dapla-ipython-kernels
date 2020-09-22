@@ -181,7 +181,8 @@ class DaplaDocumentationMagics(Magics):
         elif isinstance(binding[key], dict) and binding[key].__contains__('candidates'):
             return self.create_candidate_selector(binding, key)
         else:
-            raise UsageError("Invalid type '{}'".format(key))
+            raise UsageError("Unable to create a widget for '{}' with value '{}'\n{}"
+                             .format(key, binding[key], json.dumps(binding, indent=2)))
 
     def create_text_input(self, binding, key):
         if key == 'description':
