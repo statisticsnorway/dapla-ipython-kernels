@@ -10,10 +10,6 @@ from ..services.clients import DatasetDocClient
 from ..jupyterextensions.authextension import AuthClient, AuthError
 
 
-def current_milli_time():
-    return int(round(time.time() * 1000))
-
-
 @magics_class
 class DaplaLineageMagics(Magics):
     """Magics related to lineage management."""
@@ -25,6 +21,15 @@ class DaplaLineageMagics(Magics):
         self._input_datasets = {}
         self._output_datasets = {}
 
+    @staticmethod
+    def display(*objs):
+        from IPython.display import display
+        display(*objs)
+
+    @staticmethod
+    def current_milli_time():
+        return int(round(time.time() * 1000))
+
     @line_magic
     def lineage_input(self, line):
         """
@@ -35,7 +40,7 @@ class DaplaLineageMagics(Magics):
             # Referenced schema can be added later
             self._input_datasets[path] = {}
         else:
-            self._input_datasets[path] = {"schema": schema, "timestamp": current_milli_time()}
+            self._input_datasets[path] = {"schema": schema, "timestamp": self.current_milli_time()}
 
     @line_magic
     def lineage_output(self, line):
@@ -47,7 +52,7 @@ class DaplaLineageMagics(Magics):
             # Referenced schema can be added later
             self._output_datasets[path] = {}
         else:
-            self._output_datasets[path] = {"schema": schema, "timestamp": current_milli_time()}
+            self._output_datasets[path] = {"schema": schema, "timestamp": self.current_milli_time()}
 
     @line_magic
     def lineage_tree(self, line):
@@ -66,7 +71,7 @@ class DaplaLineageMagics(Magics):
             raise UsageError('Missing dataset name.')
         else:
             ds = self.shell.user_ns[args]
-            output_schema = {"schema": ds.schema.json(), "timestamp": current_milli_time()}
+            output_schema = {"schema": ds.schema.json(), "timestamp": self.current_milli_time()}
             return self._lineage_template_provider(output_schema, self._input_datasets)
 
     @line_magic
@@ -77,10 +82,78 @@ class DaplaLineageMagics(Magics):
         try:
             ds = self.shell.user_ns[args]
             # Generate lineage from template
-            output_schema = {"schema": ds.schema.json(), "timestamp": current_milli_time()}
+            output_schema = {"schema": ds.schema.json(), "timestamp": self.current_milli_time()}
             ds.lineage = self._lineage_template_provider(output_schema, self._input_datasets)
         except KeyError:
             raise UsageError("Could not find dataset '{}'".format(args))
+
+        variable_titles = []
+        variable_forms = []
+
+        options_layout = widgets.Layout(
+            overflow='auto',
+            min_width='100px',
+            max_width='300px',
+            max_height='300px',
+            flex_flow='column',
+            display='flex'
+        )
+
+        def capitalize_with_camelcase(s):
+            return s[0].upper() + s[1:]
+
+        for field in ds.lineage['lineage']['fields']:
+            variable_titles.append(capitalize_with_camelcase(field['name']))
+            options = []
+            for key, value in self._input_datasets.items():
+                options.append(widgets.Label(value=key))
+                for source_field in json.loads(value['schema'])['fields']:
+                    options.append(self.create_checkbox(field, key, source_field))
+
+            options_widget = widgets.VBox(options, layout=options_layout)
+
+            variable_forms.append(widgets.VBox([
+                widgets.HTML('<style>.widget-checkbox-label-bold > label > span {font-weight: bold;}</style>'),
+                widgets.HTML('Choose one or more sources for the variable <b>{}</b>. '
+                             'Closest matching source variables are marked with <b>(*)</b>:'.format(field['name'])),
+                options_widget]))
+
+        accordion = widgets.Accordion(children=variable_forms)
+
+        for i in range(len(variable_forms)):
+            accordion.set_title(i, variable_titles[i])
+
+        self.display(accordion)
+
+    def create_checkbox(self, field, key, source_field):
+        closest_match = self.is_closest_match(field['sources'], key, source_field['name'])
+        w = widgets.Checkbox(
+            description=source_field['name'],
+            value=False,
+            style={'description_width': '0px'})
+
+        if closest_match:
+            w.description = w.description + ' (*)'
+            w.add_class('widget-checkbox-label-bold')
+
+        def on_value_change(change):
+            if 'selected' not in field:
+                field['selected'] = {}
+            if key not in field['selected']:
+                field['selected'][key] = []
+            if change['new']:
+                field['selected'][key].append(source_field['name'])
+            else:
+                field['selected'][key].remove(source_field['name'])
+        w.observe(on_value_change, names='value')
+        return w
+
+    @staticmethod
+    def is_closest_match(sources, path, field):
+        for source in sources:
+            if source['field'] == field and source['path'] == path:
+                return True
+        return False
 
 
 # In order to actually use these magics, you must register them with a
