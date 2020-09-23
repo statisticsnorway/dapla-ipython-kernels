@@ -1,12 +1,15 @@
 import json
 from IPython import get_ipython
 
+from dapla.magics import DaplaLineageMagics
+
 
 def add_lineage(read_method):
     def wrapper(self, ns):
         ds = read_method(self, ns)
         if lineage_enabled() and ds is not None and '*' not in ns:
-            get_ipython().run_line_magic("lineage_input", "{} {}".format(ns, ds.schema.json()))
+            get_ipython().run_line_magic(DaplaLineageMagics.on_input_load.__name__, "{} {}"
+                                         .format(ns, ds.schema.json()))
         return ds
     return wrapper
 
@@ -34,19 +37,20 @@ def add_lineage_option(write_method):
                 self.option("dataset-lineage", lineage)
             else:
                 self.option("dataset-lineage", json.dumps(lineage, indent=2))
-        else:
+        elif lineage_enabled():
             # Generate simple lineage
-            get_ipython().run_line_magic("lineage_output", "{} {}".format(ns, self._df.schema.json()))
-            lineage = get_ipython().run_line_magic("lineage_json", "--path {}".format(ns))
+            get_ipython().run_line_magic(DaplaLineageMagics.on_output_save.__name__, "{} {}"
+                                         .format(ns, self._df.schema.json()))
+            lineage = get_ipython().run_line_magic(DaplaLineageMagics.lineage_json.__name__, "--path {}".format(ns))
             print('Generated lineage: ' + lineage)
             if type(lineage) is str:
                 self.option("dataset-lineage", lineage)
             else:
                 self.option("dataset-lineage", json.dumps(lineage, indent=2))
 
-        return write_method(self, ns)
+        write_method(self, ns)
     return wrap
 
 
 def lineage_enabled():
-    return get_ipython().find_line_magic("lineage") is not None
+    return get_ipython().find_line_magic(DaplaLineageMagics.lineage.__name__) is not None

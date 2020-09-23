@@ -4,6 +4,7 @@ from IPython.core.error import UsageError, StdinNotImplementedError
 import os
 import time
 import json
+import warnings
 from pyspark.sql import DataFrame
 import ipywidgets as widgets
 from ..services.clients import DatasetDocClient
@@ -18,8 +19,10 @@ class DaplaLineageMagics(Magics):
         # You must call the parent constructor
         super(DaplaLineageMagics, self).__init__(shell)
         self._lineage_template_provider = lineage_template_provider
-        self._input_datasets = {}
-        self._output_datasets = {}
+        self._declared_inputs = {}
+        self._declared_outputs = {}
+        self._input_trace = {}
+        self._output_trace = {}
 
     @staticmethod
     def display(*objs):
@@ -30,49 +33,76 @@ class DaplaLineageMagics(Magics):
     def current_milli_time():
         return int(round(time.time() * 1000))
 
-    @line_magic
-    def lineage_input(self, line):
-        """
-        Define input datasets
-        """
-        path, schema = line.split(' ')
-        if schema is None:
-            # Referenced schema can be added later
-            self._input_datasets[path] = {}
-        else:
-            self._input_datasets[path] = {"schema": schema, "timestamp": self.current_milli_time()}
+    @staticmethod
+    def show_missing_declaration_warning(path, method_ref):
+        warnings.warn("The path {} has not been declared. Add '%{} {}' to your notebook"
+                      .format(path, method_ref, path))
 
     @line_magic
-    def lineage_output(self, line):
+    def declare_input(self, line):
         """
-        Define output datasets
+        Register input datasets
+        """
+        self._declared_inputs[line] = {}
+
+    @line_magic
+    def declare_output(self, line):
+        """
+        Register input datasets
+        """
+        self._declared_outputs[line] = {}
+
+    @line_magic
+    def on_input_load(self, line):
+        """
+        Internal method. Called by spark decorators after an input dataframe has been loaded.
         """
         path, schema = line.split(' ')
         if schema is None:
-            # Referenced schema can be added later
-            self._output_datasets[path] = {}
+            warnings.warn('Could not find schema for path {}'.format(path))
+            self._input_trace[path] = {}
         else:
-            self._output_datasets[path] = {"schema": schema, "timestamp": self.current_milli_time()}
+            self._input_trace[path] = {"schema": schema, "timestamp": self.current_milli_time()}
+        if path not in self._declared_inputs:
+            self.show_missing_declaration_warning(path, self.declare_input.__name__)
+        else:
+            self._declared_inputs[path] = self._input_trace[path]
+
+    @line_magic
+    def on_output_save(self, line):
+        """
+        Internal method. Called by spark decorators after an output dataframe has been saved.
+        """
+        path, schema = line.split(' ')
+        if schema is None:
+            warnings.warn('Could not find schema for path {}'.format(path))
+            self._output_trace[path] = {}
+        else:
+            self._output_trace[path] = {"schema": schema, "timestamp": self.current_milli_time()}
+        if path not in self._declared_outputs:
+            self.show_missing_declaration_warning(path, self.declare_output.__name__)
+        else:
+            self._declared_outputs[path] = self._output_trace[path]
 
     @line_magic
     def lineage_tree(self, line):
-        print(u'Input datasets:\n |-- {}'.format('\n |-- '.join(self._input_datasets.keys())))
-        print(u'Output datasets:\n |-- {}'.format('\n |-- '.join(self._output_datasets.keys())))
+        print(u'Input datasets:\n |-- {}'.format('\n |-- '.join(self._declared_inputs.keys())))
+        print(u'Output datasets:\n |-- {}'.format('\n |-- '.join(self._declared_outputs.keys())))
 
     @line_magic
     def lineage_json(self, line):
         opts, args = self.parse_options(line, '', 'path')
         use_path = 'path' in opts
         if use_path:
-            if args not in self._output_datasets.keys():
-                raise UsageError('Could not find path {} in output datasets'.format(args))
-            return self._lineage_template_provider(self._output_datasets[args], self._input_datasets)
+            if args not in self._declared_outputs.keys():
+                raise UsageError('Could not find path {} in declared outputs'.format(args))
+            return self._lineage_template_provider(self._declared_outputs[args], self._declared_inputs)
         elif not args:
             raise UsageError('Missing dataset name.')
         else:
             ds = self.shell.user_ns[args]
             output_schema = {"schema": ds.schema.json(), "timestamp": self.current_milli_time()}
-            return self._lineage_template_provider(output_schema, self._input_datasets)
+            return self._lineage_template_provider(output_schema, self._declared_inputs)
 
     @line_magic
     def lineage(self, line):
@@ -83,7 +113,7 @@ class DaplaLineageMagics(Magics):
             ds = self.shell.user_ns[args]
             # Generate lineage from template
             output_schema = {"schema": ds.schema.json(), "timestamp": self.current_milli_time()}
-            ds.lineage = self._lineage_template_provider(output_schema, self._input_datasets)
+            ds.lineage = self._lineage_template_provider(output_schema, self._declared_inputs)
         except KeyError:
             raise UsageError("Could not find dataset '{}'".format(args))
 
@@ -105,7 +135,7 @@ class DaplaLineageMagics(Magics):
         for field in ds.lineage['lineage']['fields']:
             variable_titles.append(capitalize_with_camelcase(field['name']))
             options = []
-            for key, value in self._input_datasets.items():
+            for key, value in self._declared_inputs.items():
                 options.append(widgets.Label(value=key))
                 for source_field in json.loads(value['schema'])['fields']:
                     options.append(self.create_checkbox(field, key, source_field))
