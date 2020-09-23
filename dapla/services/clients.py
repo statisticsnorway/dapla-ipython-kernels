@@ -133,12 +133,12 @@ class DatasetDocClient(AbstractClient):
                 "schema": x[1]['schema'],
                 "schemaType": "SPARK",
                 "timestamp": x[1]['timestamp'],
-                "simpleLineage": use_simple,
             })
         request = {
             "schema": output_schema['schema'],
             "timestamp": output_schema['timestamp'],
             "schemaType": "SPARK",
+            "simpleLineage": use_simple,
             "dependencies": [dict(map(mapper, input_schema_map.items()))],
         }
         response = requests.post(request_url, json=request,

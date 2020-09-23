@@ -210,5 +210,5 @@ def load_ipython_extension(ipython):
     doc_template_client = DatasetDocClient(AuthClient.get_access_token, os.environ['DOC_TEMPLATE_URL'])
     # This class must be registered with a manually created instance,
     # since its constructor has different arguments from the default:
-    magics = DaplaLineageMagics(ipython, doc_template_client.get_doc_template)
+    magics = DaplaLineageMagics(ipython, doc_template_client.get_lineage_template)
     ipython.register_magics(magics)
