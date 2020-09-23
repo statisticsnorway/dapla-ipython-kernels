@@ -86,13 +86,19 @@ class DaplaLineageMagics(Magics):
 
     @line_magic
     def lineage_tree(self, line):
-        print(u'Input datasets:\n |-- {}'.format('\n |-- '.join(self._declared_inputs.keys())))
+        def input_details(ds):
+            return '{} ({})'.format(ds[0], 'loaded' if 'schema' in ds[1] else 'not loaded')
+
+        print(u'Input datasets:\n |-- {}'.format('\n |-- '.join(map(input_details, self._declared_inputs.items()))))
         print(u'Output datasets:\n |-- {}'.format('\n |-- '.join(self._declared_outputs.keys())))
 
     @line_magic
     def lineage_json(self, line):
         opts, args = self.parse_options(line, '', 'path')
         use_path = 'path' in opts
+        if len(self._declared_inputs) == 0:
+            raise UsageError("Input datasets are not defined. Add '%{} <path>' to declare input paths."
+                             .format(self.declare_input.__name__))
         if use_path:
             if args not in self._declared_outputs.keys():
                 raise UsageError('Could not find path {} in declared outputs'.format(args))
@@ -109,6 +115,12 @@ class DaplaLineageMagics(Magics):
         opts, args = self.parse_options(line, '')
         if not args:
             raise UsageError('Missing dataset name.')
+        if len(self._declared_inputs) == 0:
+            raise UsageError('Input datasets are not defined. Use %{} <path> to declare input paths.'
+                             .format(self.declare_input.__name__))
+        for declared_input in self._declared_inputs.items():
+            if 'schema' not in declared_input[1]:
+                raise UsageError('The dataset with path {} has not been loaded'.format(declared_input[0]))
         try:
             ds = self.shell.user_ns[args]
             # Generate lineage from template
