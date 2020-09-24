@@ -1,5 +1,6 @@
 import json
 from IPython import get_ipython
+from IPython.core.error import UsageError
 
 from dapla.magics import DaplaLineageMagics
 
@@ -34,19 +35,22 @@ def add_lineage_option(write_method):
             # Use existing lineage info
             lineage = self._df.lineage
             if type(lineage) is str:
-                self.option("dataset-lineage", lineage)
+                self.option("lineage-doc", lineage)
             else:
-                self.option("dataset-lineage", json.dumps(lineage, indent=2))
+                self.option("lineage-doc", json.dumps(lineage, indent=2))
         elif lineage_enabled():
-            # Generate simple lineage
-            get_ipython().run_line_magic(DaplaLineageMagics.on_output_save.__name__, "{} {}"
-                                         .format(ns, self._df.schema.json()))
-            lineage = get_ipython().run_line_magic(DaplaLineageMagics.lineage_json.__name__, "--path {}".format(ns))
-            print('Generated lineage: ' + lineage)
-            if type(lineage) is str:
-                self.option("dataset-lineage", lineage)
-            else:
-                self.option("dataset-lineage", json.dumps(lineage, indent=2))
+            try:
+                # Generate simple lineage
+                get_ipython().run_line_magic(DaplaLineageMagics.on_output_save.__name__, "{} {}"
+                                             .format(ns, self._df.schema.json()))
+                lineage = get_ipython().run_line_magic(DaplaLineageMagics.lineage_json.__name__, "--path {}".format(ns))
+                if type(lineage) is str:
+                    self.option("lineage-doc", lineage)
+                else:
+                    self.option("lineage-doc", json.dumps(lineage, indent=2))
+            except UsageError:
+                # Just skip lineage generation
+                pass
 
         write_method(self, ns)
     return wrap

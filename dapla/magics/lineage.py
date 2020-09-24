@@ -1,14 +1,16 @@
 from __future__ import print_function
-from IPython.core.magic import (Magics, magics_class, line_cell_magic, line_magic, cell_magic)
-from IPython.core.error import UsageError, StdinNotImplementedError
+
+import json
 import os
 import time
-import json
 import warnings
-from pyspark.sql import DataFrame
+
 import ipywidgets as widgets
+from IPython.core.error import UsageError
+from IPython.core.magic import (Magics, magics_class, line_magic, cell_magic)
+
+from ..jupyterextensions.authextension import AuthClient
 from ..services.clients import DatasetDocClient
-from ..jupyterextensions.authextension import AuthClient, AuthError
 
 
 @magics_class
@@ -33,24 +35,35 @@ class DaplaLineageMagics(Magics):
     def current_milli_time():
         return int(round(time.time() * 1000))
 
-    @staticmethod
-    def show_missing_declaration_warning(path, method_ref):
-        warnings.warn("The path {} has not been declared. Add '%{} {}' to your notebook"
-                      .format(path, method_ref, path))
-
-    @line_magic
-    def declare_input(self, line):
+    @cell_magic
+    def input(self, line, cell):
         """
         Register input datasets
         """
-        self._declared_inputs[line] = {}
+        opts, args = self.parse_options(line, '', 'append')
+        append = 'append' in opts
+        if not append:
+            # Reset previous state
+            self._declared_inputs = {}
+        for line in cell.strip().split('\n'):
+            if line.strip().startswith('#'):
+                continue
+            self._declared_inputs[line] = {}
 
-    @line_magic
-    def declare_output(self, line):
+    @cell_magic
+    def output(self, line, cell):
         """
         Register input datasets
         """
-        self._declared_outputs[line] = {}
+        opts, args = self.parse_options(line, '', 'append')
+        append = 'append' in opts
+        if not append:
+            # Reset previous state
+            self._declared_outputs = {}
+        for line in cell.strip().split('\n'):
+            if line.strip().startswith('#'):
+                continue
+            self._declared_outputs[line] = {}
 
     @line_magic
     def on_input_load(self, line):
@@ -64,7 +77,7 @@ class DaplaLineageMagics(Magics):
         else:
             self._input_trace[path] = {"schema": schema, "timestamp": self.current_milli_time()}
         if path not in self._declared_inputs:
-            self.show_missing_declaration_warning(path, self.declare_input.__name__)
+            self.show_missing_declaration_warning(path, self.input.__name__)
         else:
             self._declared_inputs[path] = self._input_trace[path]
 
@@ -80,7 +93,7 @@ class DaplaLineageMagics(Magics):
         else:
             self._output_trace[path] = {"schema": schema, "timestamp": self.current_milli_time()}
         if path not in self._declared_outputs:
-            self.show_missing_declaration_warning(path, self.declare_output.__name__)
+            self.show_missing_declaration_warning(path, self.output.__name__)
         else:
             self._declared_outputs[path] = self._output_trace[path]
 
@@ -96,9 +109,7 @@ class DaplaLineageMagics(Magics):
     def lineage_json(self, line):
         opts, args = self.parse_options(line, '', 'path')
         use_path = 'path' in opts
-        if len(self._declared_inputs) == 0:
-            raise UsageError("Input datasets are not defined. Add '%{} <path>' to declare input paths."
-                             .format(self.declare_input.__name__))
+        self.validate_inputs()
         if use_path:
             if args not in self._declared_outputs.keys():
                 raise UsageError('Could not find path {} in declared outputs'.format(args))
@@ -115,12 +126,7 @@ class DaplaLineageMagics(Magics):
         opts, args = self.parse_options(line, '')
         if not args:
             raise UsageError('Missing dataset name.')
-        if len(self._declared_inputs) == 0:
-            raise UsageError('Input datasets are not defined. Use %{} <path> to declare input paths.'
-                             .format(self.declare_input.__name__))
-        for declared_input in self._declared_inputs.items():
-            if 'schema' not in declared_input[1]:
-                raise UsageError('The dataset with path {} has not been loaded'.format(declared_input[0]))
+        self.validate_inputs()
         try:
             ds = self.shell.user_ns[args]
             # Generate lineage from template
@@ -189,6 +195,22 @@ class DaplaLineageMagics(Magics):
                 field['selected'][key].remove(source_field['name'])
         w.observe(on_value_change, names='value')
         return w
+
+    def show_missing_declaration_warning(self, path, method_ref):
+        from IPython.core.display import HTML
+        self.display(HTML("<b>Warning:</b> The path {} has not been declared. "
+                          "To suppress this warning add the following to a cell in your notebook: "
+                          "<pre><code style='background: hsl(220, 80%, 90%)'>%%{}\n{}</code></pre>"
+                          .format(path, method_ref, path)))
+
+    def validate_inputs(self):
+        if len(self._declared_inputs) == 0:
+            raise UsageError("Input datasets are not defined. "
+                             "To declare input paths add the following to a cell in your notebook:\n%%{}\n<path>"
+                             .format(self.input.__name__))
+        for declared_input in self._declared_inputs.items():
+            if 'schema' not in declared_input[1]:
+                raise UsageError('The dataset with path {} has not been loaded'.format(declared_input[0]))
 
     @staticmethod
     def is_closest_match(sources, path, field):
