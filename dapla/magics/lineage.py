@@ -32,13 +32,13 @@ def extract_lineage(df, path, version):
     """Extract lineage info from a given Spark DataFrame."""
     if not isinstance(df, DataFrame):
         raise UsageError("The variable '{}' is not a pyspark DataFrame".format(df))
-    if hasattr(df, 'lineage'):
-        return map_lineage(df.lineage)
     elif lineage_enabled():
         try:
-            # Generate simple lineage
             get_ipython().run_line_magic(DaplaLineageMagics.on_output_save.__name__, "{} {} {}"
                                          .format(path, version, df.schema.json()))
+            if hasattr(df, 'lineage'):
+                return map_lineage(df.lineage)
+            # Generate simple lineage
             return get_ipython().run_line_magic(DaplaLineageMagics.lineage_json.__name__, "--path {}".format(path))
         except UsageError:
             # Just skip lineage generation
@@ -59,7 +59,12 @@ def map_lineage(lineage_json):
                 'type': field['type']
             }
         else:
-            return field['sources']
+            return {
+                'confidence': field['confidence'],
+                'name': field['name'],
+                'sources': field['sources'],
+                'type': field['type']
+            }
 
     return {'lineage': {
         'fields': list(map(mapper, lineage_json['lineage']['fields'])),

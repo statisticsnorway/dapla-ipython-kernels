@@ -48,19 +48,14 @@
       {
         "name": "innskudd",
         "type": "inherited",
-        "confidence": 0.9,
+        "confidence": 0.8,
         "sources": [
           {
             "field": "innskudd",
             "path": "/skatt/konto",
             "version": 1600430243658
           }
-        ],
-        "selected": {
-          "/skatt/konto": [
-            "innskudd"
-          ]
-        }
+        ]
       }
     ],
     "sources": [

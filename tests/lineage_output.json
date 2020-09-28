@@ -35,7 +35,7 @@
       {
         "name": "innskudd",
         "type": "inherited",
-        "confidence": 0.99,
+        "confidence": 0.8,
         "sources": [
           {
             "field": "innskudd",
