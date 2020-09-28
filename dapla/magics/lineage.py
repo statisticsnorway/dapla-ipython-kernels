@@ -6,12 +6,68 @@ import time
 import warnings
 
 import ipywidgets as widgets
+from IPython import get_ipython
 from IPython.core.error import UsageError
 from IPython.core.magic import (Magics, magics_class, line_magic, cell_magic)
+from pyspark.sql import DataFrame
 
 from ..jupyterextensions.authextension import AuthClient
 from ..services.clients import DatasetDocClient
 
+
+def lineage_enabled():
+    return get_ipython().find_line_magic(DaplaLineageMagics.lineage.__name__) is not None
+
+
+def lineage_input(df, path, version):
+    """Add lineage info to an input Spark DataFrame."""
+    if not isinstance(df, DataFrame):
+        raise UsageError("The variable '{}' is not a pyspark DataFrame".format(df))
+    if lineage_enabled() and df is not None:
+        get_ipython().run_line_magic(DaplaLineageMagics.on_input_load.__name__, "{} {} {}"
+                                     .format(path, version, df.schema.json()))
+
+
+def extract_lineage(df, path, version):
+    """Extract lineage info from a given Spark DataFrame."""
+    if not isinstance(df, DataFrame):
+        raise UsageError("The variable '{}' is not a pyspark DataFrame".format(df))
+    if hasattr(df, 'lineage'):
+        return map_lineage(df.lineage)
+    elif lineage_enabled():
+        try:
+            # Generate simple lineage
+            get_ipython().run_line_magic(DaplaLineageMagics.on_output_save.__name__, "{} {} {}"
+                                         .format(path, version, df.schema.json()))
+            return get_ipython().run_line_magic(DaplaLineageMagics.lineage_json.__name__, "--path {}".format(path))
+        except UsageError:
+            # Just skip lineage generation
+            return None
+
+
+def map_lineage(lineage_json):
+    def mapper(field):
+        if 'selected' in field:
+            selections = field['selected']
+
+            def source_filter(source):
+                return source['path'] in selections and source['field'] in selections[source['path']]
+            return {
+                'confidence': 0.99,
+                'name': field['name'],
+                'sources': list(filter(source_filter, field['sources'])),
+                'type': field['type']
+            }
+        else:
+            return field['sources']
+
+    return {'lineage': {
+        'fields': list(map(mapper, lineage_json['lineage']['fields'])),
+        'name': lineage_json['lineage']['name'],
+        'sources': lineage_json['lineage']['sources'],
+        'type': lineage_json['lineage']['type']
+        }
+    }
 
 @magics_class
 class DaplaLineageMagics(Magics):
@@ -70,12 +126,12 @@ class DaplaLineageMagics(Magics):
         """
         Internal method. Called by spark decorators after an input dataframe has been loaded.
         """
-        path, schema = line.split(' ')
+        path, version, schema = line.split(' ')
         if schema is None:
             warnings.warn('Could not find schema for path {}'.format(path))
             self._input_trace[path] = {}
         else:
-            self._input_trace[path] = {"schema": schema, "timestamp": self.current_milli_time()}
+            self._input_trace[path] = {"schema": schema, "timestamp": version}
         if path not in self._declared_inputs:
             self.show_missing_declaration_warning(path, self.input.__name__)
         else:
@@ -86,12 +142,12 @@ class DaplaLineageMagics(Magics):
         """
         Internal method. Called by spark decorators after an output dataframe has been saved.
         """
-        path, schema = line.split(' ')
+        path, version, schema = line.split(' ')
         if schema is None:
             warnings.warn('Could not find schema for path {}'.format(path))
             self._output_trace[path] = {}
         else:
-            self._output_trace[path] = {"schema": schema, "timestamp": self.current_milli_time()}
+            self._output_trace[path] = {"schema": schema, "timestamp": version}
         if path not in self._declared_outputs:
             self.show_missing_declaration_warning(path, self.output.__name__)
         else:
