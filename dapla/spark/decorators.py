@@ -1,16 +1,18 @@
 import json
-from IPython import get_ipython
-from IPython.core.error import UsageError
+import os
 
-from dapla.magics import DaplaLineageMagics
+from ..magics.lineage import lineage_input, extract_lineage
+from ..jupyterextensions.authextension import AuthClient
+from ..services.clients import DataAccessClient
 
 
 def add_lineage(read_method):
     def wrapper(self, ns):
         ds = read_method(self, ns)
-        if lineage_enabled() and ds is not None and '*' not in ns:
-            get_ipython().run_line_magic(DaplaLineageMagics.on_input_load.__name__, "{} {}"
-                                         .format(ns, ds.schema.json()))
+        if '*' not in ns:
+            data_access_client = DataAccessClient(AuthClient.get_access_token, os.environ['DATA_ACCESS_URL'])
+            location_response = data_access_client.read_location(ns)
+            lineage_input(ds, ns, location_response['version'])
         return ds
     return wrapper
 
@@ -29,32 +31,20 @@ def add_doc_option(write_method):
 
 
 def add_lineage_option(write_method):
-    # Create a default dataset lineage or use df.lineage if present
     def wrap(self, ns):
-        if hasattr(self._df, 'lineage'):
-            # Use existing lineage info
-            lineage = self._df.lineage
+        # Create a default dataset lineage or use df.lineage if present
+        version = _current_milli_time()
+        lineage = extract_lineage(self._df, ns, version)
+        if lineage is not None:
+            self.option("version", version)
             if type(lineage) is str:
                 self.option("lineage-doc", lineage)
             else:
                 self.option("lineage-doc", json.dumps(lineage, indent=2))
-        elif lineage_enabled():
-            try:
-                # Generate simple lineage
-                get_ipython().run_line_magic(DaplaLineageMagics.on_output_save.__name__, "{} {}"
-                                             .format(ns, self._df.schema.json()))
-                lineage = get_ipython().run_line_magic(DaplaLineageMagics.lineage_json.__name__, "--path {}".format(ns))
-                if type(lineage) is str:
-                    self.option("lineage-doc", lineage)
-                else:
-                    self.option("lineage-doc", json.dumps(lineage, indent=2))
-            except UsageError:
-                # Just skip lineage generation
-                pass
-
         write_method(self, ns)
     return wrap
 
 
-def lineage_enabled():
-    return get_ipython().find_line_magic(DaplaLineageMagics.lineage.__name__) is not None
+def _current_milli_time():
+    import time
+    return int(round(time.time() * 1000))

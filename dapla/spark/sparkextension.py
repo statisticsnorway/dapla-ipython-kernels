@@ -2,7 +2,7 @@ import os
 import jwt
 import time
 from pyspark import SparkContext
-from pyspark.sql import DataFrame, DataFrameReader, DataFrameWriter, SparkSession
+from pyspark.sql import DataFrameReader, DataFrameWriter, SparkSession
 from ..jupyterextensions.authextension import AuthClient, AuthError
 from .decorators import add_lineage, add_lineage_option, add_doc_option
 
@@ -25,22 +25,6 @@ The ``path`` method will ensure that an access token is (re)loaded (if necessary
 def load_extensions():
     DataFrameReader.path = namespace_read
     DataFrameWriter.path = namespace_write
-    DataFrame.printDocTemplate = print_doc
-    DataFrame.printAvroSchema = print_avro_schema
-
-
-def print_doc(self, simple=False):
-    doc_template = get_doc_template(self, simple)
-    print(doc_template)
-    if not simple:
-        print("Use printDocTemplate(True) for a simplified template")
-
-
-def print_avro_schema(self, record_name="spark_schema", record_namespace=""):
-    avro_schema = self._sc._jvm.no.ssb.dapla.spark.plugin.SparkSchemaConverter.toAvroSchema(self._jdf.schema(),
-                                                                                            record_name,
-                                                                                            record_namespace)
-    print(avro_schema.toString(True))
 
 
 @add_lineage
@@ -59,12 +43,6 @@ def namespace_write(self, ns):
         self.format("gsim").save(ns)
     except AuthError as err:
         err.print_warning()
-
-
-def get_doc_template(self, simple):
-    use_simple = "true" if simple else "false"
-    # Call Java class via jvm gateway
-    return self._sc._jvm.no.ssb.dapla.spark.plugin.SparkSchemaConverter.toSchemaTemplate(self._jdf.schema(), use_simple)
 
 
 def get_session():
