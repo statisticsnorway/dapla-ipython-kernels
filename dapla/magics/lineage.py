@@ -200,12 +200,14 @@ class DaplaLineageMagics(Magics):
         variable_forms = []
 
         options_layout = widgets.Layout(
-            overflow='auto',
+            overflow_y='auto',
+            overflow_x='hidden',
             min_width='100px',
             max_width='300px',
-            max_height='300px',
+            max_height='200px',
             flex_flow='column',
-            display='flex'
+            display='flow-root',
+            flex_shrink='0'
         )
 
         def capitalize_with_camelcase(s):
@@ -216,10 +218,19 @@ class DaplaLineageMagics(Magics):
             options = []
             for key, value in self._declared_inputs.items():
                 options.append(widgets.Label(value=key))
-                for source_field in json.loads(value['schema'])['fields']:
-                    options.append(self.create_checkbox(field, key, source_field))
+                schema_fields = json.loads(value['schema'])['fields']
 
-            options_widget = widgets.VBox(options, layout=options_layout)
+                primary_options = list(filter(lambda sf: sf['name'] == field['name'], schema_fields))
+                additional_options = list(filter(lambda sf: sf['name'] != field['name'], schema_fields))
+
+                for source_field in primary_options:
+                    options.append(self.create_checkbox(field, key, source_field, closest_match=True))
+                if len(additional_options) > 0:
+                    vbox = widgets.VBox(list(map(lambda o: self.create_checkbox(field, key, o), additional_options)),
+                                        layout=options_layout)
+                    options.append(vbox)
+
+            options_widget = widgets.VBox(options)
 
             variable_forms.append(widgets.VBox([
                 widgets.HTML('<style>.widget-checkbox-label-bold > label > span {font-weight: bold;}</style>'),
@@ -234,8 +245,8 @@ class DaplaLineageMagics(Magics):
 
         self.display(accordion)
 
-    def create_checkbox(self, field, key, source_field):
-        closest_match = self.is_closest_match(field['sources'], key, source_field['name'])
+    def create_checkbox(self, field, key, source_field, closest_match=False):
+        #closest_match = self.is_closest_match(field['sources'], key, source_field['name'])
         w = widgets.Checkbox(
             description=source_field['name'],
             value=False,
