@@ -135,10 +135,10 @@ class DaplaDocumentationMagics(Magics):
                 display='flex',
                 flex_flow='column',
                 align_items='stretch',
-                width='50%'
+                width='70%'
             )))
 
-        accordion = widgets.Accordion(children=variable_forms)
+        accordion = widgets.Accordion(children=variable_forms, selected_index=None)
 
         for i in range(len(variable_forms)):
             accordion.set_title(i, variable_titles[i])
@@ -153,12 +153,12 @@ class DaplaDocumentationMagics(Magics):
                 display='flex',
                 flex_flow='column',
                 align_items='stretch',
-                width='50%'
+                width='70%'
             )
         )
 
-        display_objs = (widgets.HTML("<b>Dataset metadata</b>"), dataset_doc,
-                        widgets.HTML("<b>Instance variables</b>"), accordion)
+        display_objs = (widgets.HTML('<b style="font-size:14px">Dataset metadata</b>'), dataset_doc,
+                        widgets.HTML('<b style="font-size:14px">Instance variables</b>'), accordion)
 
         def on_button_clicked(b):
             with open(fname, 'w', encoding="utf-8") as f:
@@ -168,9 +168,9 @@ class DaplaDocumentationMagics(Magics):
             btn = widgets.Button(description='Save to file', icon='file-code')
             btn.on_click(on_button_clicked)
             out = widgets.Output()
-            self.display(*display_objs, btn, out)
+            self.display(widgets.VBox([*display_objs, btn, out]))
         else:
-            self.display(*display_objs)
+            self.display(widgets.VBox(display_objs))
 
     def create_widget(self, binding, key):
         if isinstance(binding[key], str):
