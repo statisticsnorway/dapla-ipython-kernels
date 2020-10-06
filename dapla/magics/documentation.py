@@ -41,15 +41,16 @@ class DaplaDocumentationMagics(Magics):
 
     @line_magic
     def document(self, line):
-        """This line magic assists creating documentation metadata for a given variable name. The variable must be a Spark DataFrame.
+        """This line magic assists creating documentation metadata for a given variable_name. The variable_name must be
+        resolved to a Spark DataFrame.
 
         Usage:\\
-          %document [options] variablename
+          %document [options] variable_name
 
         Options:
 
-            -f <filename>: specify a file where the documentation is stored
-            --nofile : Documentation is not stored to file
+            --nofile  : Documentation is not stored to file
+            -f <path> : Specifies a file path where the documentation is stored
         """
 
         opts, args = self.parse_options(line, 'f:', 'nofile')

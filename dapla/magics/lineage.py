@@ -184,6 +184,13 @@ class DaplaLineageMagics(Magics):
 
     @line_magic
     def lineage(self, line):
+        """This line magic assists creating documentation metadata for a given variable_name. The variable_name must
+        be resolved to a Spark DataFrame.
+
+        Usage:\\
+          %lineage variable_name
+
+        """
         opts, args = self.parse_options(line, '')
         if not args:
             raise UsageError('Missing dataset name.')
