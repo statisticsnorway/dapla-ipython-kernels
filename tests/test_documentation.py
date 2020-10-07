@@ -100,15 +100,15 @@ doc_template = {
     ]
 }
 
-expected_widgets = "HTML(value='<b>Dataset metadata</b>') \
+expected_widgets = "VBox(children=(HTML(value='<b style=\"font-size:14px\">Dataset metadata</b>'), \
 Box(children=(Box(children=(Label(value='Name'), Text(value='ds name')), \
 layout=Layout(display='flex', flex_flow='row', justify_content='space-between')), \
 Box(children=(Label(value='Description'), Textarea(value='ds description')), \
 layout=Layout(display='flex', flex_flow='row', justify_content='space-between')), \
 Box(children=(Label(value='UnitType'), Dropdown(options=(('UnitType_DUMMY', 'UnitType_DUMMY'),), value='UnitType_DUMMY')), \
 layout=Layout(display='flex', flex_flow='row', justify_content='space-between'))), \
-layout=Layout(align_items='stretch', display='flex', flex_flow='column', width='50%')) \
-HTML(value='<b>Instance variables</b>') \
+layout=Layout(align_items='stretch', display='flex', flex_flow='column', width='70%')), \
+HTML(value='<b style=\"font-size:14px\">Instance variables</b>'), \
 Accordion(children=(Box(children=(Box(children=(Label(value='Description'), \
 Textarea(value='iv1descr')), layout=Layout(display='flex', flex_flow='row', justify_content='space-between')), \
 Box(children=(Label(value='CheckboxValue'), Checkbox(value=False, indent=False)), \
@@ -118,6 +118,6 @@ layout=Layout(display='flex', flex_flow='row', justify_content='space-between'))
 Box(children=(Label(value='SelectionValue'), \
 Dropdown(index=2, options=(('name1', 'id1'), ('name2', 'id2'), ('name3', 'id3')), value='id3')), \
 layout=Layout(display='flex', flex_flow='row', justify_content='space-between'))), \
-layout=Layout(align_items='stretch', display='flex', flex_flow='column', width='50%')),), _titles={'0': 'Iv1'})\n"
-
+layout=Layout(align_items='stretch', display='flex', flex_flow='column', width='70%')),), selected_index=None, \
+_titles={'0': 'Iv1'})))\n"
 

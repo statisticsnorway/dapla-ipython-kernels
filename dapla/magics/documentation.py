@@ -69,10 +69,13 @@ class DaplaDocumentationMagics(Magics):
             raise UsageError("The variable '{}' is not a pyspark DataFrame".format(args))
 
         if fname is None and use_file_storage:
-            fname = self.ensure_valid_filename(
-                self.shell.ev('input("Enter filename where the documentation should be stored")'))
+            fname = self.shell.ev('input("Enter filename where the documentation should be stored '
+                                  '(leave blank for no file)")')
             # Update the user input for future use
-            contents = "%document -f {} {}".format(fname, line)
+            if fname == '':
+                contents = "%document --nofile {}".format(line)
+            else:
+                contents = "%document -f {} {}".format(self.ensure_valid_filename(fname), line)
             self.shell.set_next_input(contents, replace=True)
         elif use_file_storage:
             fname = self.ensure_valid_filename(fname)
