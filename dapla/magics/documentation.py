@@ -73,6 +73,7 @@ class DaplaDocumentationMagics(Magics):
                                   '(leave blank for no file)")')
             # Update the user input for future use
             if fname == '':
+                use_file_storage = False
                 contents = "%document --nofile {}".format(line)
             else:
                 contents = "%document -f {} {}".format(self.ensure_valid_filename(fname), line)
@@ -82,7 +83,8 @@ class DaplaDocumentationMagics(Magics):
 
         if hasattr(ds, 'doc') and ds.doc is not None:
             try:
-                ans = self.shell.ask_yes_no("Do you wish to overwrite existing documentation?", default='n')
+                ans = self.shell.ask_yes_no("The dataset '{}' has already been documented. "
+                                            "Do you want to proceed?".format(args), default='n')
             except StdinNotImplementedError:
                 # skip execution if this note is run in batch mode
                 ans = False
