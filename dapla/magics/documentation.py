@@ -12,6 +12,40 @@ from ..services.clients import DatasetDocClient
 from ..jupyterextensions.authextension import AuthClient, AuthError
 
 
+def extract_doc(df):
+    if not isinstance(df, DataFrame):
+        raise UsageError("The variable '{}' is not a pyspark DataFrame".format(df))
+    if hasattr(df, 'doc'):
+        return map_doc_output(df.doc)
+    else:
+        return None
+
+
+def map_doc_output(doc_json):
+    def filter_ignored_variables(variable):
+        # Todo - use an ignore field instead
+        return variable['description'] is not None and variable['description'] != ''
+
+    def map_variable(variable):
+        return dict(map(map_variable_field, variable.items()))
+
+    def map_variable_field(variable_field):
+        if type(variable_field[1]) is dict:
+            return variable_field[0], strip_content(variable_field[1])
+        else:
+            return variable_field
+
+    def strip_content(field):
+        names = ('candidates', 'enums')
+        return dict(filter(lambda f: f[0] not in names, field.items()))
+
+    return {
+        'name': doc_json['name'],
+        'description': doc_json['description'],
+        'unitType': strip_content(doc_json['unitType']),
+        'instanceVariables': list(map(map_variable, filter(filter_ignored_variables, doc_json['instanceVariables'])))}
+
+
 @magics_class
 class DaplaDocumentationMagics(Magics):
     """Magics related to documentation management (loading, saving, editing, ...)."""

@@ -2,6 +2,7 @@ import json
 import os
 
 from ..magics.lineage import lineage_input, extract_lineage
+from ..magics.documentation import extract_doc
 from ..jupyterextensions.authextension import AuthClient
 from ..services.clients import DataAccessClient
 
@@ -19,8 +20,8 @@ def add_lineage(read_method):
 
 def add_doc_option(write_method):
     def wrapper(self, ns):
-        if hasattr(self._df, 'doc'):
-            doc = self._df.doc
+        doc = extract_doc(self._df)
+        if doc is not None:
             # doc can be either str or native json
             if type(doc) is str:
                 self.option("dataset-doc", doc)

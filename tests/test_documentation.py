@@ -1,5 +1,6 @@
 import responses
 import unittest
+import json
 from unittest.mock import MagicMock
 from io import StringIO
 from os.path import dirname
@@ -8,8 +9,9 @@ from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType, StructField, StringType
 from IPython.core.error import UsageError
 
-from dapla.magics.documentation import DaplaDocumentationMagics
+from dapla.magics.documentation import DaplaDocumentationMagics, map_doc_output
 from dapla.services.clients import DatasetDocClient
+from tests import resolve_filename
 
 
 class DaplaDocumentationMagicsTest(unittest.TestCase):
@@ -66,6 +68,15 @@ class DaplaDocumentationMagicsTest(unittest.TestCase):
         print(*self._magic.display.call_args[0], file=captor, flush=True)
         print(captor.getvalue())
         self.assertEqual(expected_widgets, captor.getvalue())
+
+    def test_lineage_output(self):
+        with open(resolve_filename('doc_template.json'), 'r') as f:
+            doc_template = json.load(f)
+        with open(resolve_filename('doc_output.json'), 'r') as f:
+            expected_doc = json.load(f)
+
+        output = map_doc_output(doc_template)
+        self.assertEqual(expected_doc, output)
 
 
 doc_template = {

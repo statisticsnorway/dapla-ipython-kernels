@@ -3,16 +3,12 @@ import unittest
 from unittest.mock import MagicMock
 from io import StringIO
 import json
-import os
 
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType
 from dapla.magics.lineage import map_lineage, DaplaLineageMagics
 from dapla.services.clients import DatasetDocClient
-
-
-def resolve_filename(filename):
-    return os.path.join(os.path.dirname(__file__), filename)
+from tests import resolve_filename
 
 
 class DaplaLineageMagicsTest(unittest.TestCase):
