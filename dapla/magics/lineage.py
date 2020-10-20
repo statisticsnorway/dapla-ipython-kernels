@@ -47,32 +47,20 @@ def extract_lineage(df, path, version):
 
 def map_lineage(lineage_json):
     def mapper(field):
-        if 'selected' in field:
-            selections = field['selected']
-
-            def source_filter(source):
-                return source['path'] in selections and source['field'] in selections[source['path']]
-            return {
-                'confidence': 0.99,
-                'name': field['name'],
-                'sources': list(filter(source_filter, field['sources'])),
-                'type': field['type']
-            }
-        else:
-            return {
-                'confidence': field['confidence'],
-                'name': field['name'],
-                'sources': field['sources'],
-                'type': field['type']
-            }
+        return {
+            'confidence': field['confidence'],
+            'name': field['name'],
+            'sources': field['selected'],
+            'type': field['type']
+        }
 
     return {'lineage': {
         'fields': list(map(mapper, lineage_json['lineage']['fields'])),
         'name': lineage_json['lineage']['name'],
         'sources': lineage_json['lineage']['sources'],
         'type': lineage_json['lineage']['type']
-        }
-    }
+    }}
+
 
 @magics_class
 class DaplaLineageMagics(Magics):
@@ -230,10 +218,21 @@ class DaplaLineageMagics(Magics):
                 primary_options = list(filter(lambda sf: sf['name'] == field['name'], schema_fields))
                 additional_options = list(filter(lambda sf: sf['name'] != field['name'], schema_fields))
 
-                for source_field in primary_options:
-                    options.append(self.create_checkbox(field, key, source_field, closest_match=True))
+                def create_source_field(field_name):
+                    # Find first match in sources with the given path (should only be one)
+                    source = next(s for s in ds.lineage['lineage']['sources'] if s['path'] == key)
+                    return {
+                        'field': field_name,
+                        'path': source['path'],
+                        'version': source['version']
+                    }
+
+                for schema_field in primary_options:
+                    options.append(
+                        self.create_checkbox(field, create_source_field(schema_field['name']), closest_match=True))
                 if len(additional_options) > 0:
-                    vbox = widgets.VBox(list(map(lambda o: self.create_checkbox(field, key, o), additional_options)),
+                    vbox = widgets.VBox(list(
+                        map(lambda o: self.create_checkbox(field, create_source_field(o['name'])), additional_options)),
                                         layout=options_layout)
                     options.append(vbox)
 
@@ -252,10 +251,9 @@ class DaplaLineageMagics(Magics):
 
         self.display(accordion)
 
-    def create_checkbox(self, field, key, source_field, closest_match=False):
-        #closest_match = self.is_closest_match(field['sources'], key, source_field['name'])
+    def create_checkbox(self, field, source_field, closest_match=False):
         w = widgets.Checkbox(
-            description=source_field['name'],
+            description=source_field['field'],
             value=False,
             style={'description_width': '0px'})
 
@@ -265,13 +263,12 @@ class DaplaLineageMagics(Magics):
 
         def on_value_change(change):
             if 'selected' not in field:
-                field['selected'] = {}
-            if key not in field['selected']:
-                field['selected'][key] = []
+                field['selected'] = []
             if change['new']:
-                field['selected'][key].append(source_field['name'])
+                field['selected'].append(source_field)
             else:
-                field['selected'][key].remove(source_field['name'])
+                field['selected'].remove(source_field)
+
         w.observe(on_value_change, names='value')
         return w
 

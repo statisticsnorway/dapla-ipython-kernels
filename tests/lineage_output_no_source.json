@@ -1,0 +1,43 @@
+{
+  "lineage": {
+    "name": "spark_schema",
+    "type": "structure",
+    "fields": [
+      {
+        "name": "fnr",
+        "type": "inherited",
+        "confidence": 0.99,
+        "sources": [
+          {
+            "field": "fnr",
+            "path": "/felles/demo/dapla/oktober/konto",
+            "version": 1603122963474
+          }
+        ]
+      },
+      {
+        "name": "formue",
+        "type": "created",
+        "confidence": 0.99,
+        "sources": [
+          {
+            "field": "innskudd",
+            "path": "/felles/demo/dapla/oktober/konto",
+            "version": 1603122963474
+          },
+          {
+            "field": "gjeld",
+            "path": "/felles/demo/dapla/oktober/konto",
+            "version": 1603122963474
+          }
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "/felles/demo/dapla/oktober/konto",
+        "version": 1603122963474
+      }
+    ]
+  }
+}

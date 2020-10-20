@@ -71,3 +71,12 @@ class DaplaLineageMagicsTest(unittest.TestCase):
 
         output = map_lineage(lineage_template)
         self.assertEqual(expected_lineage, output)
+
+    def test_lineage_output_no_source(self):
+        with open(resolve_filename('lineage_template_no_source.json'), 'r') as f:
+            lineage_template = json.load(f)
+        with open(resolve_filename('lineage_output_no_source.json'), 'r') as f:
+            expected_lineage = json.load(f)
+
+        output = map_lineage(lineage_template)
+        self.assertEqual(expected_lineage, output)
