@@ -5,6 +5,7 @@ from ..magics.lineage import lineage_input, extract_lineage
 from ..magics.documentation import extract_doc
 from ..jupyterextensions.authextension import AuthClient
 from ..services.clients import DataAccessClient
+from ..services.clients import DatasetDocClient
 
 
 def add_lineage(read_method):
@@ -17,6 +18,16 @@ def add_lineage(read_method):
         return ds
     return wrapper
 
+
+def validate_doc_option(write_method):
+    def wrapper(self, ns):
+        doc = extract_doc(self._df)
+        data_doc_client = DatasetDocClient(AuthClient.get_access_token, os.environ['DOC_TEMPLATE_URL'])
+        data_doc_client.get_doc_validation('', doc)
+        print('validate_doc_option')
+        print(doc)
+        return write_method(self, ns)
+    return wrapper
 
 def add_doc_option(write_method):
     def wrapper(self, ns):
