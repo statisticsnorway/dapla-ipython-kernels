@@ -21,11 +21,10 @@ def add_lineage(read_method):
 
 def validate_doc_option(write_method):
     def wrapper(self, ns):
-        doc = extract_doc(self._df)
         data_doc_client = DatasetDocClient(AuthClient.get_access_token, os.environ['DOC_TEMPLATE_URL'])
-        data_doc_client.get_doc_validation('', doc)
-        print('validate_doc_option')
-        print(doc)
+        doc = json.dumps(extract_doc(self._df), indent=2)
+        schema = self._df.schema.json()
+        data_doc_client.get_doc_validation(schema, doc)
         return write_method(self, ns)
     return wrapper
 
