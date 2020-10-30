@@ -6,7 +6,7 @@ from ..magics.documentation import extract_doc
 from ..jupyterextensions.authextension import AuthClient
 from ..services.clients import DataAccessClient
 from ..services.clients import DatasetDocClient
-
+from IPython.core.error import UsageError
 
 def add_lineage(read_method):
     def wrapper(self, ns):
@@ -22,10 +22,14 @@ def add_lineage(read_method):
 def validate_doc_option(write_method):
     def wrapper(self, ns):
         data_doc_client = DatasetDocClient(AuthClient.get_access_token, os.environ['DOC_TEMPLATE_URL'])
-        doc = json.dumps(extract_doc(self._df), indent=2)
+        template_doc = json.dumps(extract_doc(self._df), indent=2)
         schema = self._df.schema.json()
-        data_doc_client.get_doc_validation(schema, doc)
-        return write_method(self, ns)
+        validation = data_doc_client.get_doc_validation(schema, template_doc)
+        status = validation['status']
+        message = validation['message']
+        if status == 'ok':
+            return write_method(self, ns)
+        raise UsageError("{}".format(message))
     return wrapper
 
 def add_doc_option(write_method):
