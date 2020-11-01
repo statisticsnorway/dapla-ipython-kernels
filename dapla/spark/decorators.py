@@ -8,6 +8,7 @@ from ..services.clients import DataAccessClient
 from ..services.clients import DatasetDocClient
 from IPython.core.error import UsageError
 
+
 def add_lineage(read_method):
     def wrapper(self, ns):
         ds = read_method(self, ns)
@@ -19,10 +20,14 @@ def add_lineage(read_method):
     return wrapper
 
 
+
 def validate_documentation(write_method):
     def wrapper(self, ns):
         data_doc_client = DatasetDocClient(AuthClient.get_access_token, os.environ['DOC_TEMPLATE_URL'])
-        template_doc = json.dumps(extract_doc(self._df), indent=2)
+        doc = extract_doc(self._df)
+        if doc is None:
+            return write_method(self, ns)
+        template_doc = json.dumps(doc, indent=2)
         schema = self._df.schema.json()
         validation = data_doc_client.get_doc_validation(schema, template_doc)
         status = validation['status']
@@ -31,6 +36,7 @@ def validate_documentation(write_method):
             return write_method(self, ns)
         raise UsageError("{}".format(message))
     return wrapper
+
 
 def add_doc_option(write_method):
     def wrapper(self, ns):
