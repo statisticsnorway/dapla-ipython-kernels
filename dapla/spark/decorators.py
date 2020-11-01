@@ -19,7 +19,7 @@ def add_lineage(read_method):
     return wrapper
 
 
-def validate_doc_option(write_method):
+def validate_documentation(write_method):
     def wrapper(self, ns):
         data_doc_client = DatasetDocClient(AuthClient.get_access_token, os.environ['DOC_TEMPLATE_URL'])
         template_doc = json.dumps(extract_doc(self._df), indent=2)
