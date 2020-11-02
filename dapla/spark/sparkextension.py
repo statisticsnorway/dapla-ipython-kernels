@@ -4,7 +4,7 @@ import time
 from pyspark import SparkContext
 from pyspark.sql import DataFrameReader, DataFrameWriter, SparkSession
 from ..jupyterextensions.authextension import AuthClient, AuthError
-from .decorators import add_lineage, add_lineage_option, add_doc_option
+from .decorators import add_lineage, add_lineage_option, add_doc_option, validate_documentation, validate_lineage
 
 """
 This extension will overload the spark session object (spark) with a method called ``path``.
@@ -35,6 +35,8 @@ def namespace_read(self, ns):
         err.print_warning()
 
 
+@validate_documentation
+@validate_lineage
 @add_doc_option
 @add_lineage_option
 def namespace_write(self, ns):
