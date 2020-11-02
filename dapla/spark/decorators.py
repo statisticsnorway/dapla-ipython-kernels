@@ -24,6 +24,8 @@ def validate_lineage(write_method):
     def wrapper(self, ns):
         data_doc_client = DatasetDocClient(AuthClient.get_access_token, os.environ['DOC_TEMPLATE_URL'])
         version = _current_milli_time()
+        if not hasattr(self._df, 'lineage'):
+            return write_method(self, ns)
         lineage = json.dumps(extract_lineage(self._df, ns, version), indent=2)
         schema = self._df.schema.json()
         validation = data_doc_client.get_lineage_validation(schema, lineage)
