@@ -20,6 +20,20 @@ def add_lineage(read_method):
     return wrapper
 
 
+def validate_lineage(write_method):
+    def wrapper(self, ns):
+        data_doc_client = DatasetDocClient(AuthClient.get_access_token, os.environ['DOC_TEMPLATE_URL'])
+        version = _current_milli_time()
+        lineage = json.dumps(extract_lineage(self._df, ns, version), indent=2)
+        schema = self._df.schema.json()
+        validation = data_doc_client.get_lineage_validation(schema, lineage)
+        status = validation['status']
+        message = validation['message']
+        if status == 'ok':
+            return write_method(self, ns)
+        raise UsageError("{}".format(message))
+    return wrapper
+
 
 def validate_documentation(write_method):
     def wrapper(self, ns):

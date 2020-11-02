@@ -139,6 +139,21 @@ class DatasetDocClient(AbstractClient):
         handle_error_codes(response)
         return response.json()
 
+    def get_lineage_validation(self, spark_schema, doc_linage):
+        request_url = self._base_url + '/lineage/validate'
+        request = {
+            "dataDocTemplate": doc_linage,
+            "schema": spark_schema,
+            "schemaType": "SPARK"
+        }
+        response = requests.post(request_url, json=request,
+                                 headers={
+                                     'Authorization': 'Bearer %s' % self._user_token_provider()
+                                 }, allow_redirects=False)
+        handle_error_codes(response)
+        return response.json()
+
+
 
     def get_lineage_template(self, output_schema, input_schema_map, use_simple=False):
         request_url = self._base_url + '/lineage/template'
