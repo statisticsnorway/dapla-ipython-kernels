@@ -28,9 +28,9 @@ def validate_lineage(write_method):
         schema = self._df.schema.json()
         validation = data_doc_client.get_lineage_validation(schema, lineage)
         status = validation['status']
-        message = validation['message']
         if status == 'ok':
             return write_method(self, ns)
+        message = validation['message']
         raise UsageError("{}".format(message))
     return wrapper
 
@@ -45,9 +45,9 @@ def validate_documentation(write_method):
         schema = self._df.schema.json()
         validation = data_doc_client.get_doc_validation(schema, template_doc)
         status = validation['status']
-        message = validation['message']
         if status == 'ok':
             return write_method(self, ns)
+        message = validation['message']
         raise UsageError("{}".format(message))
     return wrapper
 
