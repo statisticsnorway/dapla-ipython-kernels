@@ -249,7 +249,19 @@ class DaplaLineageMagics(Magics):
         for i in range(len(variable_forms)):
             accordion.set_title(i, variable_titles[i])
 
-        self.display(accordion)
+        def on_button_clicked(b):
+            with open("fname.json", 'w', encoding="utf-8") as f:
+                json.dump(ds.lineage, f)
+
+        use_file_storage = True
+        if use_file_storage:
+            btn = widgets.Button(description='Save to file', icon='file-code')
+            btn.on_click(on_button_clicked)
+            out = widgets.Output()
+            self.display(widgets.VBox([accordion, btn, out]))
+        else:
+            self.display(accordion)
+
 
     def create_checkbox(self, field, source_field, closest_match=False):
         w = widgets.Checkbox(
