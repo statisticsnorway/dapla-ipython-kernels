@@ -76,6 +76,14 @@ class DaplaLineageMagics(Magics):
         self._output_trace = {}
 
     @staticmethod
+    def ensure_valid_filename(fname):
+        if fname == '':
+            raise UsageError("Invalid filename '{}'".format(fname))
+        if not fname.endswith('.json'):
+            fname = fname + ".json"
+        return fname
+
+    @staticmethod
     def display(*objs):
         from IPython.display import display
         display(*objs)
@@ -179,9 +187,13 @@ class DaplaLineageMagics(Magics):
           %lineage variable_name
 
         """
-        opts, args = self.parse_options(line, '')
+        opts, args = self.parse_options(line, 'f:', 'nofile')
         if not args:
-            raise UsageError('Missing dataset name.')
+            raise UsageError('Missing variable name.')
+
+        fname = opts.get('f')
+        use_file_storage = 'nofile' not in opts
+
         self.validate_inputs()
         try:
             ds = self.shell.user_ns[args]
@@ -250,10 +262,9 @@ class DaplaLineageMagics(Magics):
             accordion.set_title(i, variable_titles[i])
 
         def on_button_clicked(b):
-            with open("fname.json", 'w', encoding="utf-8") as f:
+            with open(fname, 'w', encoding="utf-8") as f:
                 json.dump(ds.lineage, f)
 
-        use_file_storage = True
         if use_file_storage:
             btn = widgets.Button(description='Save to file', icon='file-code')
             btn.on_click(on_button_clicked)
