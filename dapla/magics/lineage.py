@@ -11,7 +11,7 @@ from IPython.core.error import UsageError
 from IPython.core.magic import (Magics, magics_class, line_magic, cell_magic)
 from pyspark.sql import DataFrame
 
-from ..jupyterextensions.authextension import AuthClient
+from ..jupyterextensions.authextension import AuthClient, AuthError
 from ..services.clients import DatasetDocClient
 
 
@@ -197,11 +197,30 @@ class DaplaLineageMagics(Magics):
         self.validate_inputs()
         try:
             ds = self.shell.user_ns[args]
-            # Generate lineage from template
-            output_schema = {"schema": ds.schema.json(), "timestamp": self.current_milli_time()}
-            ds.lineage = self._lineage_template_provider(output_schema, self._declared_inputs)
         except KeyError:
             raise UsageError("Could not find dataset '{}'".format(args))
+
+        try:
+            if use_file_storage:
+                file_exists = os.path.isfile(fname)
+                if file_exists:
+                    with open(fname, 'r') as f:
+                        ds.lineage = json.load(f)
+                        print(u'Lineage {} loaded', fname)  # debug
+                else:
+                    # Generate lineage from template
+                    output_schema = {"schema": ds.schema.json(), "timestamp": self.current_milli_time()}
+                    ds.lineage = self._lineage_template_provider(output_schema, self._declared_inputs)
+
+                    with open(fname, 'w', encoding="utf-8") as f:
+                        json.dump(ds.lineage, f)
+            else:
+                # Generate lineage from template
+                output_schema = {"schema": ds.schema.json(), "timestamp": self.current_milli_time()}
+                ds.lineage = self._lineage_template_provider(output_schema, self._declared_inputs)
+        except AuthError as err:
+            err.print_warning()
+            return
 
         variable_titles = []
         variable_forms = []
@@ -273,11 +292,15 @@ class DaplaLineageMagics(Magics):
         else:
             self.display(accordion)
 
-
     def create_checkbox(self, field, source_field, closest_match=False):
+        checked = False
+        if 'selected' in field:
+            selected_field = field['selected'][0]['field']
+            checked = selected_field == source_field['field']
+
         w = widgets.Checkbox(
             description=source_field['field'],
-            value=False,
+            value=checked,
             style={'description_width': '0px'})
 
         if closest_match:
