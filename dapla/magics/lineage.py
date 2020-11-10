@@ -222,6 +222,21 @@ class DaplaLineageMagics(Magics):
             err.print_warning()
             return
 
+        accordion = self.create_widgets(ds.lineage)
+
+        def on_button_clicked(b):
+            with open(fname, 'w', encoding="utf-8") as f:
+                json.dump(ds.lineage, f)
+
+        if use_file_storage:
+            btn = widgets.Button(description='Save to file', icon='file-code')
+            btn.on_click(on_button_clicked)
+            out = widgets.Output()
+            self.display(widgets.VBox([accordion, btn, out]))
+        else:
+            self.display(accordion)
+
+    def create_widgets(self, lineage):
         variable_titles = []
         variable_forms = []
 
@@ -239,7 +254,7 @@ class DaplaLineageMagics(Magics):
         def capitalize_with_camelcase(s):
             return s[0].upper() + s[1:]
 
-        for field in ds.lineage['lineage']['fields']:
+        for field in lineage['lineage']['fields']:
             variable_titles.append(capitalize_with_camelcase(field['name']))
             options = []
             for key, value in self._declared_inputs.items():
@@ -251,7 +266,7 @@ class DaplaLineageMagics(Magics):
 
                 def create_source_field(field_name):
                     # Find first match in sources with the given path (should only be one)
-                    source = next(s for s in ds.lineage['lineage']['sources'] if s['path'] == key)
+                    source = next(s for s in lineage['lineage']['sources'] if s['path'] == key)
                     return {
                         'field': field_name,
                         'path': source['path'],
@@ -264,7 +279,7 @@ class DaplaLineageMagics(Magics):
                 if len(additional_options) > 0:
                     vbox = widgets.VBox(list(
                         map(lambda o: self.create_checkbox(field, create_source_field(o['name'])), additional_options)),
-                                        layout=options_layout)
+                        layout=options_layout)
                     options.append(vbox)
 
             options_widget = widgets.VBox(options)
@@ -274,23 +289,10 @@ class DaplaLineageMagics(Magics):
                 widgets.HTML('Choose one or more sources for the variable <b>{}</b>. '
                              'Closest matching source variables are marked with <b>(*)</b>:'.format(field['name'])),
                 options_widget]))
-
         accordion = widgets.Accordion(children=variable_forms)
-
         for i in range(len(variable_forms)):
             accordion.set_title(i, variable_titles[i])
-
-        def on_button_clicked(b):
-            with open(fname, 'w', encoding="utf-8") as f:
-                json.dump(ds.lineage, f)
-
-        if use_file_storage:
-            btn = widgets.Button(description='Save to file', icon='file-code')
-            btn.on_click(on_button_clicked)
-            out = widgets.Output()
-            self.display(widgets.VBox([accordion, btn, out]))
-        else:
-            self.display(accordion)
+        return accordion
 
     def create_checkbox(self, field, source_field, closest_match=False):
         checked = False
