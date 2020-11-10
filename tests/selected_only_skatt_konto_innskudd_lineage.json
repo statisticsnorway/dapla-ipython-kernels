@@ -1,0 +1,84 @@
+{
+  "lineage": {
+    "name": "spark_schema",
+    "type": "structure",
+    "fields": [
+      {
+        "name": "kontonummer",
+        "type": "inherited",
+        "confidence": 0.9,
+        "sources": [
+          {
+            "field": "kontonummer",
+            "path": "/skatt/person",
+            "version": 1600430243658
+          },
+          {
+            "field": "kontonummer",
+            "path": "/skatt/konto",
+            "version": 1600430243658
+          }
+        ],
+        "selected": [
+          {
+            "field": "kontonummer",
+            "path": "/skatt/konto",
+            "version": 1600430243658
+          }
+        ]
+      },
+      {
+        "name": "personidentifikator",
+        "type": "inherited",
+        "confidence": 0.9,
+        "sources": [
+          {
+            "field": "personidentifikator",
+            "path": "/skatt/person",
+            "version": 1600430243658
+          }
+        ],
+        "selected": [
+          {
+            "field": "personidentifikator",
+            "path": "/skatt/person",
+            "version": 1600430243658
+          }
+        ]
+      },
+      {
+        "name": "innskudd",
+        "type": "inherited",
+        "confidence": 0.9,
+        "sources": [
+          {
+            "field": "innskudd",
+            "path": "/skatt/konto",
+            "version": 1600430243658
+          }
+        ],
+        "selected": [
+          {
+            "field": "innskudd",
+            "path": "/skatt/konto",
+            "version": 1600430243658
+          }
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "/skatt/person",
+        "version": 1600430243658
+      },
+      {
+        "path": "/skatt/konto",
+        "version": 1600430243658
+      },
+      {
+        "path": "/skatt/unrelated",
+        "version": 1600430243658
+      }
+    ]
+  }
+}

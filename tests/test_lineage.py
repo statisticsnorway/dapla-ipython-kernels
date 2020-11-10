@@ -101,6 +101,43 @@ class DaplaLineageMagicsTest(unittest.TestCase):
                     "Checkbox(value=False, description='stuff'"]
         self.assertEqual(expected, checked)
 
+    @responses.activate
+    def test_read_lineage_template_and_populate_controls_only_skatt_konto_should_be_selected(self):
+        controls = self.setup_and_call_lineage('-f selected_only_skatt_konto_innskudd_lineage.json innskudd ')
+        checked = re.findall("<b>\w+</b>|Label\(value='/\w+/\w+'\)|Checkbox\(value=\w{4}\w?, description='\w+(?:.{4})?'", controls)
+        expected = ['<b>kontonummer</b>',
+                    "Label(value='/skatt/person')",
+                    "Checkbox(value=False, description='kontonummer (*)'",
+                    "Checkbox(value=False, description='personidentifikator'",
+                    "Label(value='/skatt/konto')",
+                    "Checkbox(value=True, description='kontonummer (*)'",
+                    "Checkbox(value=False, description='innskudd'",
+                    "Label(value='/skatt/unrelated')",
+                    "Checkbox(value=False, description='weird'",
+                    "Checkbox(value=False, description='stuff'",
+                    '<b>personidentifikator</b>',
+                    "Label(value='/skatt/person')",
+                    "Checkbox(value=True, description='personidentifikator (*)'",
+                    "Checkbox(value=False, description='kontonummer'",
+                    "Label(value='/skatt/konto')",
+                    "Checkbox(value=False, description='kontonummer'",
+                    "Checkbox(value=False, description='innskudd'",
+                    "Label(value='/skatt/unrelated')",
+                    "Checkbox(value=False, description='weird'",
+                    "Checkbox(value=False, description='stuff'",
+                    '<b>innskudd</b>',
+                    "Label(value='/skatt/person')",
+                    "Checkbox(value=False, description='personidentifikator'",
+                    "Checkbox(value=False, description='kontonummer'",
+                    "Label(value='/skatt/konto')",
+                    "Checkbox(value=True, description='innskudd (*)'",
+                    "Checkbox(value=False, description='kontonummer'",
+                    "Label(value='/skatt/unrelated')",
+                    "Checkbox(value=False, description='weird'",
+                    "Checkbox(value=False, description='stuff'"]
+        self.assertEqual(expected, checked)
+
+
     def setup_and_call_lineage(self, linage_args):
         with open(resolve_filename('lineage_template.json'), 'r') as f:
             lineage_template = json.load(f)
