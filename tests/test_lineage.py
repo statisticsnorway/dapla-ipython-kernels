@@ -57,7 +57,7 @@ class DaplaLineageMagicsTest(unittest.TestCase):
         innskudd = person.join(konto, 'kontonummer', how='inner')
         self._magic.shell.user_ns = {"innskudd": innskudd}
         # Run the lineage magic
-        self._magic.lineage('innskudd')
+        self._magic.lineage('--nofile innskudd')
         # Capture the display output
         captor = StringIO()
         print(*self._magic.display.call_args[0], file=captor, flush=True)
