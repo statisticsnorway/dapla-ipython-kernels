@@ -30,9 +30,7 @@ class DaplaLineageMagicsTest(unittest.TestCase):
 
     @responses.activate
     def test_generate_lineage_template(self):
-        controls = self.setup_and_call_lineage('--nofile innskudd')
-        checked = re.findall("<b>\w+</b>|Label\(value='/\w+/\w+'\)|Checkbox\(value=\w{4}\w?, description='\w+(?:.{4})?'", controls)
-
+        checked = self.setup_and_call_lineage('--nofile innskudd')
         expected = ['<b>kontonummer</b>',
                     "Label(value='/skatt/person')",
                     "Checkbox(value=False, description='kontonummer (*)'",
@@ -67,8 +65,7 @@ class DaplaLineageMagicsTest(unittest.TestCase):
 
     @responses.activate
     def test_read_lineage_template_and_populate_controls(self):
-        controls = self.setup_and_call_lineage('-f selected_innskudd_lineage.json innskudd ')
-        checked = re.findall("<b>\w+</b>|Label\(value='/\w+/\w+'\)|Checkbox\(value=\w{4}\w?, description='\w+(?:.{4})?'", controls)
+        checked = self.setup_and_call_lineage('-f selected_innskudd_lineage.json innskudd ')
         expected = ['<b>kontonummer</b>',
                     "Label(value='/skatt/person')",
                     "Checkbox(value=True, description='kontonummer (*)'",
@@ -103,8 +100,7 @@ class DaplaLineageMagicsTest(unittest.TestCase):
 
     @responses.activate
     def test_read_lineage_template_and_populate_controls_only_skatt_konto_should_be_selected(self):
-        controls = self.setup_and_call_lineage('-f selected_only_skatt_konto_innskudd_lineage.json innskudd ')
-        checked = re.findall("<b>\w+</b>|Label\(value='/\w+/\w+'\)|Checkbox\(value=\w{4}\w?, description='\w+(?:.{4})?'", controls)
+        checked = self.setup_and_call_lineage('-f selected_only_skatt_konto_innskudd_lineage.json innskudd ')
         expected = ['<b>kontonummer</b>',
                     "Label(value='/skatt/person')",
                     "Checkbox(value=False, description='kontonummer (*)'",
@@ -136,7 +132,6 @@ class DaplaLineageMagicsTest(unittest.TestCase):
                     "Checkbox(value=False, description='weird'",
                     "Checkbox(value=False, description='stuff'"]
         self.assertEqual(expected, checked)
-
 
     def setup_and_call_lineage(self, linage_args):
         with open(resolve_filename('lineage_template.json'), 'r') as f:
@@ -170,7 +165,9 @@ class DaplaLineageMagicsTest(unittest.TestCase):
         # Capture the display output
         captor = StringIO()
         print(*self._magic.display.call_args[0], file=captor, flush=True)
-        return captor.getvalue()
+        controls = captor.getvalue()
+        regexp = "<b>\w+</b>|Label\(value='/\w+/\w+'\)|Checkbox\(value=\w{4}\w?, description='\w+(?:.{4})?'"
+        return re.findall(regexp, controls)
 
     def test_lineage_output(self):
         with open(resolve_filename('selected_innskudd_lineage.json'), 'r') as f:
