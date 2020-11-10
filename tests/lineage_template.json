@@ -18,18 +18,6 @@
             "path": "/skatt/konto",
             "version": 1600430243658
           }
-        ],
-        "selected": [
-          {
-            "field": "kontonummer",
-            "path": "/skatt/person",
-            "version": 1600430243658
-          },
-          {
-            "field": "kontonummer",
-            "path": "/skatt/konto",
-            "version": 1600430243658
-          }
         ]
       },
       {
@@ -42,13 +30,6 @@
             "path": "/skatt/person",
             "version": 1600430243658
           }
-        ],
-        "selected": [
-          {
-            "field": "personidentifikator",
-            "path": "/skatt/person",
-            "version": 1600430243658
-          }
         ]
       },
       {
@@ -56,13 +37,6 @@
         "type": "inherited",
         "confidence": 0.8,
         "sources": [
-          {
-            "field": "innskudd",
-            "path": "/skatt/konto",
-            "version": 1600430243658
-          }
-        ],
-        "selected": [
           {
             "field": "innskudd",
             "path": "/skatt/konto",
