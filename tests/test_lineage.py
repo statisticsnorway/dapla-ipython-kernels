@@ -3,6 +3,7 @@ import unittest
 from unittest.mock import MagicMock
 from io import StringIO
 import json
+import re
 
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType
@@ -62,6 +63,76 @@ class DaplaLineageMagicsTest(unittest.TestCase):
         captor = StringIO()
         print(*self._magic.display.call_args[0], file=captor, flush=True)
         print(captor.getvalue())
+
+    @responses.activate
+    def test_read_lineage_template_and_populate_controls(self):
+        with open(resolve_filename('lineage_template.json'), 'r') as f:
+            lineage_template = json.load(f)
+        responses.add(responses.POST, 'http://mock.no/lineage/template',
+                      json=lineage_template, status=200)
+
+        # Create 3 input datasets
+        person_type = StructType([
+            StructField('personidentifikator', StringType()),
+            StructField('kontonummer', StringType())])
+        person = self._spark.createDataFrame([], person_type)
+        unrelated_type = StructType([
+            StructField('weird', StringType()),
+            StructField('stuff', StringType())])
+        unrelated = self._spark.createDataFrame([], unrelated_type)
+        konto_type = StructType([
+            StructField('kontonummer', StringType()),
+            StructField('innskudd', IntegerType())])
+        konto = self._spark.createDataFrame([], konto_type)
+        # Register inputs
+        self._magic.input('', '/skatt/person\n/skatt/konto\n/skatt/unrelated')
+        # Load inputs
+        self._magic.on_input_load('/skatt/person {} {}'.format(1111, person.schema.json()))
+        self._magic.on_input_load('/skatt/konto {} {}'.format(1111, konto.schema.json()))
+        self._magic.on_input_load('/skatt/unrelated {} {}'.format(1111, unrelated.schema.json()))
+
+        # Output dataset
+        innskudd = person.join(konto, 'kontonummer', how='inner')
+        self._magic.shell.user_ns = {"innskudd": innskudd}
+        # Run the lineage magic
+        self._magic.lineage('-f innskudd_lineage.json innskudd ')
+        # Capture the display output
+        captor = StringIO()
+        print(*self._magic.display.call_args[0], file=captor, flush=True)
+        controls = captor.getvalue()
+        checked = re.findall("<b>\w+</b>|Label\(value='/\w+/\w+'\)|Checkbox\(value=\w{4}\w?, description='\w+(?:.{4})?'", controls)
+        print(checked)
+        expected = ['<b>kontonummer</b>',
+                    "Label(value='/skatt/person')",
+                    "Checkbox(value=True, description='kontonummer (*)'",
+                    "Checkbox(value=False, description='personidentifikator'",
+                    "Label(value='/skatt/konto')",
+                    "Checkbox(value=True, description='kontonummer (*)'",
+                    "Checkbox(value=False, description='innskudd'",
+                    "Label(value='/skatt/unrelated')",
+                    "Checkbox(value=False, description='weird'",
+                    "Checkbox(value=False, description='stuff'",
+                    '<b>personidentifikator</b>',
+                    "Label(value='/skatt/person')",
+                    "Checkbox(value=True, description='personidentifikator (*)'",
+                    "Checkbox(value=False, description='kontonummer'",
+                    "Label(value='/skatt/konto')",
+                    "Checkbox(value=False, description='kontonummer'",
+                    "Checkbox(value=False, description='innskudd'",
+                    "Label(value='/skatt/unrelated')",
+                    "Checkbox(value=False, description='weird'",
+                    "Checkbox(value=False, description='stuff'",
+                    '<b>innskudd</b>',
+                    "Label(value='/skatt/person')",
+                    "Checkbox(value=False, description='personidentifikator'",
+                    "Checkbox(value=False, description='kontonummer'",
+                    "Label(value='/skatt/konto')",
+                    "Checkbox(value=True, description='innskudd (*)'",
+                    "Checkbox(value=False, description='kontonummer'",
+                    "Label(value='/skatt/unrelated')",
+                    "Checkbox(value=False, description='weird'",
+                    "Checkbox(value=False, description='stuff'"]
+        self.assertEqual(expected, checked)
 
     def test_lineage_output(self):
         with open(resolve_filename('lineage_template.json'), 'r') as f:
