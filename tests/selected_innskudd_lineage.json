@@ -6,7 +6,7 @@
       {
         "name": "kontonummer",
         "type": "inherited",
-        "confidence": 0.9,
+        "confidence": 0.99,
         "sources": [
           {
             "field": "kontonummer",
@@ -22,12 +22,12 @@
         "selected": [
           {
             "field": "kontonummer",
-            "path": "/skatt/konto",
+            "path": "/skatt/person",
             "version": 1600430243658
           },
           {
             "field": "kontonummer",
-            "path": "/skatt/person",
+            "path": "/skatt/konto",
             "version": 1600430243658
           }
         ]
@@ -35,7 +35,7 @@
       {
         "name": "personidentifikator",
         "type": "inherited",
-        "confidence": 0.9,
+        "confidence": 0.99,
         "sources": [
           {
             "field": "personidentifikator",
@@ -54,7 +54,7 @@
       {
         "name": "innskudd",
         "type": "inherited",
-        "confidence": 0.9,
+        "confidence": 0.8,
         "sources": [
           {
             "field": "innskudd",

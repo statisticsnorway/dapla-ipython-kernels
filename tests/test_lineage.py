@@ -173,7 +173,7 @@ class DaplaLineageMagicsTest(unittest.TestCase):
         return captor.getvalue()
 
     def test_lineage_output(self):
-        with open(resolve_filename('lineage_template.json'), 'r') as f:
+        with open(resolve_filename('selected_innskudd_lineage.json'), 'r') as f:
             lineage_template = json.load(f)
         with open(resolve_filename('lineage_output.json'), 'r') as f:
             expected_lineage = json.load(f)
