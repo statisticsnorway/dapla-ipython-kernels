@@ -67,7 +67,7 @@ class DaplaLineageMagicsTest(unittest.TestCase):
 
     @responses.activate
     def test_read_lineage_template_and_populate_controls(self):
-        controls = self.setup_and_call_lineage('-f innskudd_lineage.json innskudd ')
+        controls = self.setup_and_call_lineage('-f selected_innskudd_lineage.json innskudd ')
         checked = re.findall("<b>\w+</b>|Label\(value='/\w+/\w+'\)|Checkbox\(value=\w{4}\w?, description='\w+(?:.{4})?'", controls)
         expected = ['<b>kontonummer</b>',
                     "Label(value='/skatt/person')",
