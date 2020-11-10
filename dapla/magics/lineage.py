@@ -295,8 +295,10 @@ class DaplaLineageMagics(Magics):
     def create_checkbox(self, field, source_field, closest_match=False):
         checked = False
         if 'selected' in field:
-            selected_field = field['selected'][0]['field']
-            checked = selected_field == source_field['field']
+            for selected in field['selected']:
+                checked = selected['field'] == source_field['field'] and selected['path'] == source_field['path']
+                if checked:
+                    break
 
         w = widgets.Checkbox(
             description=source_field['field'],
