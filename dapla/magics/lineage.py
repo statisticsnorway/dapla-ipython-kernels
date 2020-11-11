@@ -206,7 +206,6 @@ class DaplaLineageMagics(Magics):
                 if file_exists:
                     with open(fname, 'r') as f:
                         ds.lineage = json.load(f)
-                        print(u'Lineage {} loaded', fname)  # debug
                 else:
                     # Generate lineage from template
                     output_schema = {"schema": ds.schema.json(), "timestamp": self.current_milli_time()}
@@ -321,14 +320,8 @@ class DaplaLineageMagics(Magics):
         if 'selected' in field:
             for selected in field['selected']:
                 checked = selected['field'] == source_field['field'] and selected['path'] == source_field['path']
-                print('{} == {} and {} == {} -> selected= {}'.format(
-                    selected['field'], source_field['field'], selected['path'], source_field['path'], checked))
                 if checked:
                     return True
-        # else:
-            # print("### field don't have selected")
-            # print(field)
-
         return False
 
     def show_missing_declaration_warning(self, path, method_ref):
