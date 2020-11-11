@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 from io import StringIO
 import json
 import re
+import os
 
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType
@@ -132,6 +133,17 @@ class DaplaLineageMagicsTest(unittest.TestCase):
                     "Checkbox(value=False, description='weird'",
                     "Checkbox(value=False, description='stuff'"]
         self.assertEqual(expected, checked)
+
+    @responses.activate
+    def test_create_default_file_when_missing_filename_args(self):
+        self.setup_and_call_lineage('innskudd')
+        file_name = 'lineage_innskudd.json'
+        if os.path.isfile(file_name):
+            print(file_name)
+            os.remove(file_name)
+        else:
+            self.fail("expected file not created {}".format(file_name))
+
 
     def setup_and_call_lineage(self, linage_args):
         with open(resolve_filename('lineage_template.json'), 'r') as f:

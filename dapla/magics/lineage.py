@@ -187,31 +187,20 @@ class DaplaLineageMagics(Magics):
           %lineage variable_name
 
         """
-        opts, args = self.parse_options(line, 'f:', 'nofile')
-        if not args:
-            raise UsageError('Missing variable name.')
-
-        fname = opts.get('f')
-        use_file_storage = 'nofile' not in opts
-
-        self.validate_inputs()
-        try:
-            ds = self.shell.user_ns[args]
-        except KeyError:
-            raise UsageError("Could not find dataset '{}'".format(args))
+        ds, file_name, use_file_storage = self.get_input(line)
 
         try:
             if use_file_storage:
-                file_exists = os.path.isfile(fname)
+                file_exists = os.path.isfile(file_name)
                 if file_exists:
-                    with open(fname, 'r') as f:
+                    with open(file_name, 'r') as f:
                         ds.lineage = json.load(f)
                 else:
                     # Generate lineage from template
                     output_schema = {"schema": ds.schema.json(), "timestamp": self.current_milli_time()}
                     ds.lineage = self._lineage_template_provider(output_schema, self._declared_inputs)
 
-                    with open(fname, 'w', encoding="utf-8") as f:
+                    with open(file_name, 'w', encoding="utf-8") as f:
                         json.dump(ds.lineage, f)
             else:
                 # Generate lineage from template
@@ -224,7 +213,7 @@ class DaplaLineageMagics(Magics):
         accordion = self.create_widgets(ds.lineage)
 
         def on_button_clicked(b):
-            with open(fname, 'w', encoding="utf-8") as f:
+            with open(file_name, 'w', encoding="utf-8") as f:
                 json.dump(ds.lineage, f)
 
         if use_file_storage:
@@ -234,6 +223,21 @@ class DaplaLineageMagics(Magics):
             self.display(widgets.VBox([accordion, btn, out]))
         else:
             self.display(accordion)
+
+    def get_input(self, line):
+        opts, args = self.parse_options(line, 'f:', 'nofile')
+        if not args:
+            raise UsageError('Missing variable name.')
+        fname = opts.get('f')
+        if not fname:
+            fname = 'lineage_{}.json'.format(args)  # add default json file if missing
+        use_file_storage = 'nofile' not in opts
+        self.validate_inputs()
+        try:
+            ds = self.shell.user_ns[args]
+        except KeyError:
+            raise UsageError("Could not find dataset '{}'".format(args))
+        return ds, fname, use_file_storage
 
     def create_widgets(self, lineage):
         variable_titles = []
