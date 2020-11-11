@@ -295,12 +295,7 @@ class DaplaLineageMagics(Magics):
         return accordion
 
     def create_checkbox(self, field, source_field, closest_match=False):
-        checked = False
-        if 'selected' in field:
-            for selected in field['selected']:
-                checked = selected['field'] == source_field['field'] and selected['path'] == source_field['path']
-                if checked:
-                    break
+        checked = self.is_checked(field, source_field)
 
         w = widgets.Checkbox(
             description=source_field['field'],
@@ -321,6 +316,20 @@ class DaplaLineageMagics(Magics):
 
         w.observe(on_value_change, names='value')
         return w
+
+    def is_checked(self, field, source_field):
+        if 'selected' in field:
+            for selected in field['selected']:
+                checked = selected['field'] == source_field['field'] and selected['path'] == source_field['path']
+                print('{} == {} and {} == {} -> selected= {}'.format(
+                    selected['field'], source_field['field'], selected['path'], source_field['path'], checked))
+                if checked:
+                    return True
+        # else:
+            # print("### field don't have selected")
+            # print(field)
+
+        return False
 
     def show_missing_declaration_warning(self, path, method_ref):
         from IPython.core.display import HTML
