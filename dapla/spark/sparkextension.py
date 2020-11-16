@@ -49,7 +49,7 @@ def namespace_write(self, ns):
 
 def get_session():
     session = SparkSession._instantiatedSession
-    if should_reload_token(session.sparkContext.getConf()):
+    if AuthClient.is_ready() and should_reload_token(session.sparkContext.getConf()):
         # Fetch new access token
         SparkContext._active_spark_context._conf.set("spark.ssb.access", AuthClient.get_access_token())
     return session

@@ -51,6 +51,10 @@ class AuthClient:
         else:
             raise AuthError
 
+    @staticmethod
+    def is_ready():
+        return 'JUPYTERHUB_HANDLER_CUSTOM_AUTH_URL' in os.environ
+
 
 class AuthError(Exception):
     """This exception class is used when the communication with the custom auth handler fails.
