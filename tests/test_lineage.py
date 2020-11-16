@@ -66,7 +66,8 @@ class DaplaLineageMagicsTest(unittest.TestCase):
 
     @responses.activate
     def test_read_lineage_template_and_populate_controls(self):
-        checked = self.setup_and_call_lineage('-f selected_innskudd_lineage.json innskudd ')
+        checked = self.setup_and_call_lineage('-f {} innskudd'.format(
+            resolve_filename('selected_innskudd_lineage.json')))
         expected = ['<b>kontonummer</b>',
                     "Label(value='/skatt/person')",
                     "Checkbox(value=True, description='kontonummer (*)'",
@@ -101,7 +102,8 @@ class DaplaLineageMagicsTest(unittest.TestCase):
 
     @responses.activate
     def test_read_lineage_template_and_populate_controls_only_skatt_konto_should_be_selected(self):
-        checked = self.setup_and_call_lineage('-f selected_only_skatt_konto_innskudd_lineage.json innskudd ')
+        checked = self.setup_and_call_lineage('-f {} innskudd '.format(
+            resolve_filename('selected_only_skatt_konto_innskudd_lineage.json')))
         expected = ['<b>kontonummer</b>',
                     "Label(value='/skatt/person')",
                     "Checkbox(value=False, description='kontonummer (*)'",
