@@ -11,7 +11,7 @@ from IPython.core.error import UsageError
 from IPython.core.magic import (Magics, magics_class, line_magic, cell_magic)
 from pyspark.sql import DataFrame
 
-from ..jupyterextensions.authextension import AuthClient
+from ..jupyterextensions.authextension import AuthClient, AuthError
 from ..services.clients import DatasetDocClient
 
 
@@ -74,6 +74,14 @@ class DaplaLineageMagics(Magics):
         self._declared_outputs = {}
         self._input_trace = {}
         self._output_trace = {}
+
+    @staticmethod
+    def ensure_valid_filename(fname):
+        if fname == '':
+            raise UsageError("Invalid filename '{}'".format(fname))
+        if not fname.endswith('.json'):
+            fname = fname + ".json"
+        return fname
 
     @staticmethod
     def display(*objs):
@@ -179,18 +187,59 @@ class DaplaLineageMagics(Magics):
           %lineage variable_name
 
         """
-        opts, args = self.parse_options(line, '')
+        ds, file_name, use_file_storage = self.get_input(line)
+
+        try:
+            if use_file_storage:
+                file_exists = os.path.isfile(file_name)
+                if file_exists:
+                    with open(file_name, 'r') as f:
+                        ds.lineage = json.load(f)
+                else:
+                    # Generate lineage from template
+                    output_schema = {"schema": ds.schema.json(), "timestamp": self.current_milli_time()}
+                    ds.lineage = self._lineage_template_provider(output_schema, self._declared_inputs)
+
+                    with open(file_name, 'w', encoding="utf-8") as f:
+                        json.dump(ds.lineage, f)
+            else:
+                # Generate lineage from template
+                output_schema = {"schema": ds.schema.json(), "timestamp": self.current_milli_time()}
+                ds.lineage = self._lineage_template_provider(output_schema, self._declared_inputs)
+        except AuthError as err:
+            err.print_warning()
+            return
+
+        accordion = self.create_widgets(ds.lineage)
+
+        def on_button_clicked(b):
+            with open(file_name, 'w', encoding="utf-8") as f:
+                json.dump(ds.lineage, f)
+
+        if use_file_storage:
+            btn = widgets.Button(description='Save to file', icon='file-code')
+            btn.on_click(on_button_clicked)
+            out = widgets.Output()
+            self.display(widgets.VBox([accordion, btn, out]))
+        else:
+            self.display(accordion)
+
+    def get_input(self, line):
+        opts, args = self.parse_options(line, 'f:', 'nofile')
         if not args:
-            raise UsageError('Missing dataset name.')
+            raise UsageError('Missing variable name.')
+        fname = opts.get('f')
+        if not fname:
+            fname = 'lineage_{}.json'.format(args)  # add default json file if missing
+        use_file_storage = 'nofile' not in opts
         self.validate_inputs()
         try:
             ds = self.shell.user_ns[args]
-            # Generate lineage from template
-            output_schema = {"schema": ds.schema.json(), "timestamp": self.current_milli_time()}
-            ds.lineage = self._lineage_template_provider(output_schema, self._declared_inputs)
         except KeyError:
             raise UsageError("Could not find dataset '{}'".format(args))
+        return ds, fname, use_file_storage
 
+    def create_widgets(self, lineage):
         variable_titles = []
         variable_forms = []
 
@@ -208,7 +257,7 @@ class DaplaLineageMagics(Magics):
         def capitalize_with_camelcase(s):
             return s[0].upper() + s[1:]
 
-        for field in ds.lineage['lineage']['fields']:
+        for field in lineage['lineage']['fields']:
             variable_titles.append(capitalize_with_camelcase(field['name']))
             options = []
             for key, value in self._declared_inputs.items():
@@ -220,7 +269,7 @@ class DaplaLineageMagics(Magics):
 
                 def create_source_field(field_name):
                     # Find first match in sources with the given path (should only be one)
-                    source = next(s for s in ds.lineage['lineage']['sources'] if s['path'] == key)
+                    source = next(s for s in lineage['lineage']['sources'] if s['path'] == key)
                     return {
                         'field': field_name,
                         'path': source['path'],
@@ -233,7 +282,7 @@ class DaplaLineageMagics(Magics):
                 if len(additional_options) > 0:
                     vbox = widgets.VBox(list(
                         map(lambda o: self.create_checkbox(field, create_source_field(o['name'])), additional_options)),
-                                        layout=options_layout)
+                        layout=options_layout)
                     options.append(vbox)
 
             options_widget = widgets.VBox(options)
@@ -243,18 +292,17 @@ class DaplaLineageMagics(Magics):
                 widgets.HTML('Choose one or more sources for the variable <b>{}</b>. '
                              'Closest matching source variables are marked with <b>(*)</b>:'.format(field['name'])),
                 options_widget]))
-
         accordion = widgets.Accordion(children=variable_forms)
-
         for i in range(len(variable_forms)):
             accordion.set_title(i, variable_titles[i])
-
-        self.display(accordion)
+        return accordion
 
     def create_checkbox(self, field, source_field, closest_match=False):
+        checked = self.is_checked(field, source_field)
+
         w = widgets.Checkbox(
             description=source_field['field'],
-            value=False,
+            value=checked,
             style={'description_width': '0px'})
 
         if closest_match:
@@ -271,6 +319,14 @@ class DaplaLineageMagics(Magics):
 
         w.observe(on_value_change, names='value')
         return w
+
+    def is_checked(self, field, source_field):
+        if 'selected' in field:
+            for selected in field['selected']:
+                checked = selected['field'] == source_field['field'] and selected['path'] == source_field['path']
+                if checked:
+                    return True
+        return False
 
     def show_missing_declaration_warning(self, path, method_ref):
         from IPython.core.display import HTML
