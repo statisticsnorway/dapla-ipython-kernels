@@ -35,11 +35,11 @@ release: ## Release a new version, uploading it to PyPI
 	twine upload dist/*
 
 .PHONY: bump-version-patch
-bump-version-patch: ## Bump patch version, e.g. 0.0.1 -> 0.0.2
+bump-version-patch: ## Bump patch version, e.g. 0.0.1 -> 0.0.2. Don’t forget to git-push with the --tags flag.
 	bumpversion patch
 
 .PHONY: bump-version-minor
-bump-version-minor: ## Bump minor version, e.g. 0.0.1 -> 0.1.0
+bump-version-minor: ## Bump minor version, e.g. 0.0.1 -> 0.1.0. Don’t forget to git-push with the --tags flag.
 	bumpversion minor
 
 
