@@ -55,8 +55,17 @@ jobs:
     displayName: "Make release and publish to PyPi"
     condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/'))
     steps:
+      - task: UsePythonVersion@0
+        inputs:
+          versionSpec: '3.8'
+        displayName: 'Use Python 3.8'
+
       - script: |
-          pip install tox wheel twine
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+        displayName: 'Install dependencies'
+
+      - script: |
           make release-validate
         displayName: "Validate release before uploading to PyPi"
 
