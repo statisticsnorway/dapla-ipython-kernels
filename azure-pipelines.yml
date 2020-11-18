@@ -12,6 +12,7 @@ pool:
 jobs:
   - job: 'BuildAndTest'
     displayName: "Build and test python package"
+    condition: not(startsWith(variables['Build.SourceBranch'], 'refs/tags/'))
     pool:
       vmImage: 'ubuntu-latest'
 
