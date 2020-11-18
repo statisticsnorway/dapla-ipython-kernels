@@ -4,39 +4,64 @@
 # https://docs.microsoft.com/azure/devops/pipelines/languages/python
 
 trigger:
-- master
+  - master
 
 pool:
   vmImage: 'ubuntu-latest'
-strategy:
-  matrix:
-    Python38:
-      python.version: '3.8'
 
-steps:
-- task: UsePythonVersion@0
-  inputs:
-    versionSpec: '$(python.version)'
-  displayName: 'Use Python $(python.version)'
+jobs:
+  - job: 'BuildAndTest'
+    displayName: "Build and test python package"
+    condition: not(startsWith(variables['Build.SourceBranch'], 'refs/tags/'))
+    pool:
+      vmImage: 'ubuntu-latest'
 
-- script: |
-    python -m pip install --upgrade pip
-    pip install -r requirements.txt
-  displayName: 'Install dependencies'
+    steps:
+      - task: UsePythonVersion@0
+        inputs:
+          versionSpec: '3.8'
+        displayName: 'Use Python 3.8'
 
-- script: |
-    pip install pytest
-    pip install pytest-cov
-    pytest tests --doctest-modules --junitxml=junit/test-results.xml --cov=. --cov-report=xml --cov-report=html
-  displayName: 'Test with pytest'
+      - script: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+        displayName: 'Install dependencies'
 
-- task: PublishTestResults@2
-  condition: succeededOrFailed()
-  inputs:
-    testResultsFiles: '**/test-*.xml'
-    testRunTitle: 'Publish test results for Python $(python.version)'
-- task: PublishCodeCoverageResults@1
-  inputs:
-    codeCoverageTool: Cobertura
-    summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.xml'
-    reportDirectory: '$(System.DefaultWorkingDirectory)/**/htmlcov'
+      - script: |
+          pip install pytest
+          pip install pytest-cov
+          pytest tests --doctest-modules --junitxml=junit/test-results.xml --cov=. --cov-report=xml --cov-report=html
+        displayName: 'Test with pytest'
+
+      - task: PublishTestResults@2
+        condition: succeededOrFailed()
+        inputs:
+          testResultsFiles: '**/test-*.xml'
+          testRunTitle: 'Publish test results for Python $(python.version)'
+      - task: PublishCodeCoverageResults@1
+        inputs:
+          codeCoverageTool: Cobertura
+          summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.xml'
+          reportDirectory: '$(System.DefaultWorkingDirectory)/**/htmlcov'
+
+  - job: 'Release'
+    displayName: "Make release and publish to PyPi"
+    condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/'))
+    steps:
+      - script: |
+          pip install wheel twine
+          make release-validate
+        displayName: "Validate release before uploading to PyPi"
+
+      # Authenticate Maven to Nexus using predefined Service Connections
+      # (Project Settings->Pipelines->Service Connections)
+      - task: TwineAuthenticate@1
+        displayName: 'Twine Authenticate'
+        condition: succeeded()
+        inputs:
+          pythonUploadServiceConnection: pypi-dapla
+
+      - script: |
+          make release
+        condition: succeeded()
+        displayName: "Release to PyPi"
