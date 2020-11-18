@@ -3,8 +3,15 @@
 # Add steps that analyze code, save the dist with the build record, publish to a PyPI-compatible index, and more:
 # https://docs.microsoft.com/azure/devops/pipelines/languages/python
 
+name: $(Build.SourceBranch)-$(date:yyyyMMdd)$(rev:.r)
+# Pipeline triggers on any branch and tag
 trigger:
-  - master
+  branches:
+    include:
+      - '*'
+  tags:
+    include:
+      - '*'
 
 pool:
   vmImage: 'ubuntu-latest'
