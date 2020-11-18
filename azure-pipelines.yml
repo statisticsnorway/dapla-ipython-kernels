@@ -12,6 +12,7 @@ strategy:
   matrix:
     Python38:
       python.version: '3.8'
+    displayName: 'Build Python library'
 
 steps:
   - task: UsePythonVersion@0
@@ -41,19 +42,24 @@ steps:
       summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.xml'
       reportDirectory: '$(System.DefaultWorkingDirectory)/**/htmlcov'
 
-  - script: |
-      make release-validate
+  - task: Release
     condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/'))
-    displayName: "Validate release before uploading to PyPi"
+    displayName: "Make release and publish to PyPi"
+    steps:
+    - script: |
+        pip install wheel twine
+        make release-validate
+      displayName: "Validate release before uploading to PyPi"
 
-  # Authenticate Maven to Nexus using predefined Service Connections
-  # (Project Settings->Pipelines->Service Connections)
-  - task: TwineAuthenticate@1
-    displayName: 'Twine Authenticate'
-    condition: succeeded()
-    inputs:
-      pythonUploadServiceConnection: pypi-dapla
+    # Authenticate Maven to Nexus using predefined Service Connections
+    # (Project Settings->Pipelines->Service Connections)
+    - task: TwineAuthenticate@1
+      displayName: 'Twine Authenticate'
+      condition: succeeded()
+      inputs:
+        pythonUploadServiceConnection: pypi-dapla
 
-  - script: |
-      make release
-    displayName: "Release to PyPi"
+    - script: |
+        make release
+      condition: succeeded()
+      displayName: "Release to PyPi"
