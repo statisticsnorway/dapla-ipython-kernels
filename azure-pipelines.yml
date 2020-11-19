@@ -19,7 +19,7 @@ pool:
 jobs:
   - job: 'BuildAndTest'
     displayName: "Build and test python package"
-    condition: not(startsWith(variables['Build.SourceBranch'], 'refs/tags/'))
+    condition: startsWith(variables['Build.SourceBranch'], 'refs/tags/')
     pool:
       vmImage: 'ubuntu-latest'
 
@@ -53,7 +53,7 @@ jobs:
 
   - job: 'Release'
     displayName: "Make release and publish to PyPi"
-    condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/'))
+    #condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/'))
     steps:
       - task: UsePythonVersion@0
         inputs:
@@ -82,6 +82,8 @@ jobs:
       # --config-file to pass the environment variable set by the authenticate task.
       - script: |
           make release-validate
-          twine upload --config-file $(PYPIRC_PATH) dist/*
+          echo 'Config file $(PYPIRC_PATH)'
+          cat $(PYPIRC_PATH)
+          python -m twine upload -r "ssb-ipython-kernels" --config-file $(PYPIRC_PATH) dist/*
         condition: succeeded()
         displayName: "Release to PyPi"
