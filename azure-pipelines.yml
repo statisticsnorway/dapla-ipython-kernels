@@ -82,7 +82,7 @@ jobs:
       # --config-file to pass the environment variable set by the authenticate task.
       - script: |
           make release-validate
-          echo 'Config file $(PYPIRC_PATH)'
+          echo 'Using config file $(PYPIRC_PATH)'
           python -m twine upload -r "ssb-ipython-kernels" --config-file $(PYPIRC_PATH) dist/*
         condition: succeeded()
         displayName: "Release to PyPi"
