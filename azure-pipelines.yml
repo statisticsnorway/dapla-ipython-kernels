@@ -82,6 +82,6 @@ jobs:
       # --config-file to pass the environment variable set by the authenticate task.
       - script: |
           make release-validate
-          twine upload -r 'dapla-ipython-kernels' --config-file $(PYPIRC_PATH) dist/*
+          twine upload -r 'pypi-dapla' --config-file $(PYPIRC_PATH) dist/*
         condition: succeeded()
         displayName: "Release to PyPi"
