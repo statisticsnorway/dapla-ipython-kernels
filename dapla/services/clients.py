@@ -125,6 +125,16 @@ class DatasetDocClient(AbstractClient):
         handle_error_codes(response)
         return response.json()
 
+    def get_doc_template_candidates(self, type):
+        request_url = self._base_url + '/doc/candidates'
+        response = requests.get(request_url, type,
+                                 headers={
+                                     'Authorization': 'Bearer %s' % self._user_token_provider()
+                                 }, allow_redirects=False)
+        handle_error_codes(response)
+        return response.json()
+
+
     def get_doc_validation(self, spark_schema, doc_template):
         request_url = self._base_url + '/doc/validate'
         request = {

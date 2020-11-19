@@ -50,10 +50,11 @@ def map_doc_output(doc_json):
 class DaplaDocumentationMagics(Magics):
     """Magics related to documentation management (loading, saving, editing, ...)."""
 
-    def __init__(self, shell, doc_template_provider):
+    def __init__(self, shell, doc_template_provider, doc_template_candidates_provider):
         # You must call the parent constructor
         super(DaplaDocumentationMagics, self).__init__(shell)
         self._doc_template_provider = doc_template_provider
+        self._doc_template_candidates_provider = doc_template_candidates_provider
 
     @staticmethod
     def ensure_valid_filename(fname):
@@ -219,6 +220,7 @@ class DaplaDocumentationMagics(Magics):
         elif isinstance(binding[key], dict) and binding[key].__contains__('enums'):
             return self.create_enum_selector(binding, key)
         elif isinstance(binding[key], dict) and binding[key].__contains__('candidates'):
+            # TODO: get candidates from service
             return self.create_candidate_selector(binding, key)
         else:
             raise UsageError("Unable to create a widget for '{}' with value '{}'\n{}"
@@ -261,11 +263,22 @@ class DaplaDocumentationMagics(Magics):
 
     def create_candidate_selector(self, binding, key):
         component = widgets.Dropdown()
-        component.options = list(map(lambda o: (o['name'], o['id']), binding[key]['candidates']))
-        component.value = binding[key]['selected-id']
+        binding_key = binding[key]
+        candidates = binding_key['candidates']
+        selected_id = binding_key['selected-id']
+
+        candidates_from_service = self._doc_template_candidates_provider(key)
+        print("candidates_from_service")
+        print(candidates_from_service)
+        if len(candidates_from_service) > 0:
+            candidates = candidates_from_service
+            selected_id = 'id-1' # TODO: check and set selected id
+
+        component.options = list(map(lambda o: (o['name'], o['id']), candidates))
+        component.value = selected_id
 
         def on_change(v):
-            binding[key]['selected-id'] = v['new']
+            binding_key['selected-id'] = v['new']
 
         component.observe(on_change, names='value')
         return component
@@ -283,6 +296,6 @@ def load_ipython_extension(ipython):
     doc_template_client = DatasetDocClient(AuthClient.get_access_token, os.environ['DOC_TEMPLATE_URL'])
     # This class must be registered with a manually created instance,
     # since its constructor has different arguments from the default:
-    magics = DaplaDocumentationMagics(ipython, doc_template_client.get_doc_template)
+    magics = DaplaDocumentationMagics(ipython, doc_template_client.get_doc_template, doc_template_client.get_doc_template_candidates)
     ipython.register_magics(magics)
 
