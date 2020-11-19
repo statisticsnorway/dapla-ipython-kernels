@@ -67,7 +67,7 @@ jobs:
         displayName: 'Install dependencies'
 
       - script: |
-          make release-validate
+          echo make release-validate
         displayName: "Validate release before uploading to PyPi"
 
       # Authenticate Maven to Nexus using predefined Service Connections
@@ -83,6 +83,7 @@ jobs:
       - script: |
           make release-validate
           echo 'Using config file $(PYPIRC_PATH)'
+          ehco $(PYPIRC_PATH)
           python -m twine upload -r "ssb-ipython-kernels" --config-file $(PYPIRC_PATH) dist/*
         condition: succeeded()
         displayName: "Release to PyPi"
