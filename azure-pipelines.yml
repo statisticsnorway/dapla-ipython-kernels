@@ -83,7 +83,6 @@ jobs:
       - script: |
           make release-validate
           echo 'Config file $(PYPIRC_PATH)'
-          cat $(PYPIRC_PATH)
           python -m twine upload -r "ssb-ipython-kernels" --config-file $(PYPIRC_PATH) dist/*
         condition: succeeded()
         displayName: "Release to PyPi"
