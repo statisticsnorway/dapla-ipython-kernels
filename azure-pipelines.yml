@@ -19,7 +19,7 @@ pool:
 jobs:
   - job: 'BuildAndTest'
     displayName: "Build and test python package"
-    condition: startsWith(variables['Build.SourceBranch'], 'refs/tags/')
+    condition: not(startsWith(variables['Build.SourceBranch'], 'refs/tags/'))
     pool:
       vmImage: 'ubuntu-latest'
 
@@ -53,7 +53,7 @@ jobs:
 
   - job: 'Release'
     displayName: "Make release and publish to PyPi"
-    #condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/'))
+    condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/'))
     steps:
       - task: UsePythonVersion@0
         inputs:
@@ -67,7 +67,7 @@ jobs:
         displayName: 'Install dependencies'
 
       - script: |
-          echo make release-validate
+          make release-validate
         displayName: "Validate release before uploading to PyPi"
 
       # Authenticate Maven to Nexus using predefined Service Connections
@@ -83,7 +83,6 @@ jobs:
       - script: |
           make release-validate
           echo 'Using config file $(PYPIRC_PATH)'
-          ehco $(PYPIRC_PATH)
           python -m twine upload -r "ssb-ipython-kernels" --config-file $(PYPIRC_PATH) dist/*
         condition: succeeded()
         displayName: "Release to PyPi"
