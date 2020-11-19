@@ -78,7 +78,10 @@ jobs:
         inputs:
           pythonUploadServiceConnection: pypi-dapla
 
+      # Use command line script to 'twine upload', use -r to pass the repository name and
+      # --config-file to pass the environment variable set by the authenticate task.
       - script: |
-          make release
+          make release-validate
+          twine upload -r 'dapla-ipython-kernels' --config-file $(PYPIRC_PATH) dist/*
         condition: succeeded()
         displayName: "Release to PyPi"
