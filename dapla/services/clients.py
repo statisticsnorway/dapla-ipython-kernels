@@ -126,7 +126,10 @@ class DatasetDocClient(AbstractClient):
         return response.json()
 
     def get_doc_template_candidates(self, type):
-        request_url = self._base_url + '/doc/candidates'
+        if type != "representedVariable":
+            return ""
+        type = "RepresentedVariable"
+        request_url = self._base_url + '/doc/candidates/' + type
         response = requests.get(request_url, type,
                                  headers={
                                      'Authorization': 'Bearer %s' % self._user_token_provider()
