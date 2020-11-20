@@ -26,7 +26,11 @@ class DaplaDocumentationMagicsTest(unittest.TestCase):
 
     def setUp(self):
         doc_template_client = DatasetDocClient(lambda: 'mock-user-token', 'http://mock.no/')
-        self._magic = DaplaDocumentationMagics(None, doc_template_client.get_doc_template)
+        self._magic = DaplaDocumentationMagics(
+            None,
+            doc_template_client.get_doc_template,
+            doc_template_client.get_doc_template_candidates
+        )
         self._magic.shell = MagicMock()
         self._magic.display = MagicMock()
 
@@ -47,6 +51,8 @@ class DaplaDocumentationMagicsTest(unittest.TestCase):
     def test_generate_doc_template(self):
         responses.add(responses.POST, 'http://mock.no/doc/template',
                       json=doc_template, status=200)
+        responses.add(responses.GET, 'http://mock.no/doc/candidates/unitType?unitType',
+                      json=[], status=200)
         output_file = "{}/output/docs/mockfile.json".format(dirname(__file__))
         # Mock that the user inputs a file name
         self._magic.shell.ev = MagicMock(return_value=output_file)
@@ -61,6 +67,9 @@ class DaplaDocumentationMagicsTest(unittest.TestCase):
     def test_generate_doc_template_no_file(self):
         responses.add(responses.POST, 'http://mock.no/doc/template',
                       json=doc_template, status=200)
+        responses.add(responses.GET, 'http://mock.no/doc/candidates/unitType?unitType',
+                      json=[], status=200)
+
         # Run the magic
         self._magic.document('--nofile ds')
         # Capture the display output
