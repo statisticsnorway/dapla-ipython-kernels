@@ -130,7 +130,8 @@ class DatasetDocClient(AbstractClient):
             'unitType': 'UnitType',
             'representedVariable': 'RepresentedVariable',
             'population': 'Population',
-            'sentinelValueDomain': 'DescribedValueDomain'  # or DescribedValueDomain TODO: find a solution
+            # This will make dataset-doc-service fetch both EnumeratedValueDomain and DescribedValueDomain
+            'sentinelValueDomain': 'SentinelValueDomain'
         }
         if type in map:
             return map[type]
@@ -142,7 +143,7 @@ class DatasetDocClient(AbstractClient):
             return ""
 
         request_url = self._base_url + '/doc/candidates/' + concept_type
-        response = requests.get(request_url, concept_type,
+        response = requests.get(request_url,
                                 headers={
                                     'Authorization': 'Bearer %s' % self._user_token_provider()
                                 }, allow_redirects=False)

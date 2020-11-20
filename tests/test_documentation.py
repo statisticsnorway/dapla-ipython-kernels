@@ -67,7 +67,7 @@ class DaplaDocumentationMagicsTest(unittest.TestCase):
     def test_generate_doc_template_no_file(self):
         responses.add(responses.POST, 'http://mock.no/doc/template',
                       json=doc_template, status=200)
-        responses.add(responses.GET, 'http://mock.no/doc/candidates/unitType?unitType',
+        responses.add(responses.GET, 'http://mock.no/doc/candidates/UnitType',
                       json=[], status=200)
 
         # Run the magic
