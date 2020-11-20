@@ -168,8 +168,9 @@ class DaplaDocumentationMagics(Magics):
                 if key == 'name':
                     continue
                 form_items.append(
-                    widgets.Box([widgets.Label(value=capitalize_with_camelcase(key)), self.create_widget(instanceVar, key)],
-                                layout=form_item_layout))
+                    widgets.Box(
+                        [widgets.Label(value=capitalize_with_camelcase(key)), self.create_widget(instanceVar, key)],
+                        layout=form_item_layout))
 
             variable_forms.append(widgets.Box(form_items, layout=widgets.Layout(
                 display='flex',
@@ -189,12 +190,12 @@ class DaplaDocumentationMagics(Magics):
                         layout=form_item_layout),
             widgets.Box([widgets.Label(value='UnitType'), self.create_widget(ds.doc, 'unitType')],
                         layout=form_item_layout)
-            ], layout=widgets.Layout(
-                display='flex',
-                flex_flow='column',
-                align_items='stretch',
-                width='70%'
-            )
+        ], layout=widgets.Layout(
+            display='flex',
+            flex_flow='column',
+            align_items='stretch',
+            width='70%'
+        )
         )
 
         display_objs = (widgets.HTML('<b style="font-size:14px">Dataset metadata</b>'), dataset_doc,
@@ -261,6 +262,16 @@ class DaplaDocumentationMagics(Magics):
         component.observe(on_change, names='value')
         return component
 
+    @staticmethod
+    def check_selected_id(candidates, selected_id):
+        if len(candidates) == 0:
+            raise ValueError('candidates list was empty')
+        for cand in candidates:
+            if cand['id'] == selected_id:
+                return selected_id;
+        # return first if selected id is not found
+        return candidates[0]['id']
+
     def create_candidate_selector(self, binding, key):
         component = widgets.Dropdown()
         binding_key = binding[key]
@@ -272,7 +283,7 @@ class DaplaDocumentationMagics(Magics):
         print(candidates_from_service)
         if len(candidates_from_service) > 0:
             candidates = candidates_from_service
-            selected_id = 'id-1' # TODO: check and set selected id
+            selected_id = self.check_selected_id(candidates, selected_id)  # TODO: check and set selected id
 
         component.options = list(map(lambda o: (o['name'], o['id']), candidates))
         component.value = selected_id
@@ -296,6 +307,6 @@ def load_ipython_extension(ipython):
     doc_template_client = DatasetDocClient(AuthClient.get_access_token, os.environ['DOC_TEMPLATE_URL'])
     # This class must be registered with a manually created instance,
     # since its constructor has different arguments from the default:
-    magics = DaplaDocumentationMagics(ipython, doc_template_client.get_doc_template, doc_template_client.get_doc_template_candidates)
+    magics = DaplaDocumentationMagics(ipython, doc_template_client.get_doc_template,
+                                      doc_template_client.get_doc_template_candidates)
     ipython.register_magics(magics)
-

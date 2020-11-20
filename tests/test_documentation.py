@@ -87,6 +87,22 @@ class DaplaDocumentationMagicsTest(unittest.TestCase):
         output = map_doc_output(doc_template)
         self.assertEqual(expected_doc, output)
 
+    def test_check_selected_id(self):
+        candidates = [
+            {
+                'id': 'id-1',
+                'name': 'Test 1'
+            },
+            {
+                'id': 'id-2',
+                'name': 'Test 2'
+            }
+        ]
+        self.assertEqual('id-1', self._magic.check_selected_id(candidates, 'id-1'))
+        self.assertEqual('id-2', self._magic.check_selected_id(candidates, 'id-2'))
+
+        self.assertEqual('id-1', self._magic.check_selected_id(candidates, 'missing-id'))
+
 
 doc_template = {
     "name": "ds name",

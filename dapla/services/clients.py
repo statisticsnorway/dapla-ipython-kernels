@@ -125,18 +125,29 @@ class DatasetDocClient(AbstractClient):
         handle_error_codes(response)
         return response.json()
 
+    def map_type(self, type):
+        map = {
+            'unitType': 'UnitType',
+            'representedVariable': 'RepresentedVariable',
+            'population': 'Population',
+            'sentinelValueDomain': 'DescribedValueDomain'  # or DescribedValueDomain TODO: find a solution
+        }
+        if type in map:
+            return map[type]
+        return None
+
     def get_doc_template_candidates(self, type):
-        if type != "representedVariable":
+        concept_type = self.map_type(type)
+        if concept_type is None:
             return ""
-        type = "RepresentedVariable"
-        request_url = self._base_url + '/doc/candidates/' + type
-        response = requests.get(request_url, type,
-                                 headers={
-                                     'Authorization': 'Bearer %s' % self._user_token_provider()
-                                 }, allow_redirects=False)
+
+        request_url = self._base_url + '/doc/candidates/' + concept_type
+        response = requests.get(request_url, concept_type,
+                                headers={
+                                    'Authorization': 'Bearer %s' % self._user_token_provider()
+                                }, allow_redirects=False)
         handle_error_codes(response)
         return response.json()
-
 
     def get_doc_validation(self, spark_schema, doc_template):
         request_url = self._base_url + '/doc/validate'
@@ -166,8 +177,6 @@ class DatasetDocClient(AbstractClient):
         handle_error_codes(response)
         return response.json()
 
-
-
     def get_lineage_template(self, output_schema, input_schema_map, use_simple=False):
         request_url = self._base_url + '/lineage/template'
 
@@ -177,6 +186,7 @@ class DatasetDocClient(AbstractClient):
                 "schemaType": "SPARK",
                 "timestamp": x[1]['timestamp'],
             })
+
         request = {
             "schema": output_schema['schema'],
             "timestamp": output_schema['timestamp'],
