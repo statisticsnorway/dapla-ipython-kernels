@@ -279,8 +279,6 @@ class DaplaDocumentationMagics(Magics):
         selected_id = binding_key['selected-id']
 
         candidates_from_service = self._doc_template_candidates_provider(key)
-        print("candidates_from_service")
-        print(candidates_from_service)
         if len(candidates_from_service) > 0:
             candidates = candidates_from_service
             selected_id = self.check_selected_id(candidates, selected_id)  # TODO: check and set selected id
