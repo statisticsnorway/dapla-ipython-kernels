@@ -55,6 +55,7 @@ class DaplaDocumentationMagics(Magics):
         super(DaplaDocumentationMagics, self).__init__(shell)
         self._doc_template_provider = doc_template_provider
         self._doc_template_candidates_provider = doc_template_candidates_provider
+        self._status = None
 
     @staticmethod
     def ensure_valid_filename(fname):
@@ -167,9 +168,16 @@ class DaplaDocumentationMagics(Magics):
             for key in instanceVar.keys():
                 if key == 'name':
                     continue
+                inst_dropdown = self.create_widget(instanceVar, key)
+                label = widgets.Label(value=capitalize_with_camelcase(key))
+                if self._status is None:
+                    dropdown = [label, inst_dropdown]
+                else:
+                    dropdown = [label, inst_dropdown, widgets.HTML(self._status)]
+                    self._status = None
                 form_items.append(
                     widgets.Box(
-                        [widgets.Label(value=capitalize_with_camelcase(key)), self.create_widget(instanceVar, key)],
+                        dropdown,
                         layout=form_item_layout))
 
             variable_forms.append(widgets.Box(form_items, layout=widgets.Layout(
@@ -221,7 +229,6 @@ class DaplaDocumentationMagics(Magics):
         elif isinstance(binding[key], dict) and binding[key].__contains__('enums'):
             return self.create_enum_selector(binding, key)
         elif isinstance(binding[key], dict) and binding[key].__contains__('candidates'):
-            # TODO: get candidates from service
             return self.create_candidate_selector(binding, key)
         else:
             raise UsageError("Unable to create a widget for '{}' with value '{}'\n{}"
@@ -262,15 +269,16 @@ class DaplaDocumentationMagics(Magics):
         component.observe(on_change, names='value')
         return component
 
-    @staticmethod
-    def check_selected_id(candidates, selected_id):
+    def check_selected_id(self, type, candidates, selected_id):
         if len(candidates) == 0:
             raise ValueError('candidates list was empty')
         for cand in candidates:
             if cand['id'] == selected_id:
                 return selected_id;
         # return first if selected id is not found
-        return candidates[0]['id']
+        first = candidates[0]['id']
+        self._status = '{}" is removed! selecting:{}'.format(selected_id, first)
+        return first
 
     def create_candidate_selector(self, binding, key):
         component = widgets.Dropdown()
@@ -281,7 +289,7 @@ class DaplaDocumentationMagics(Magics):
         candidates_from_service = self._doc_template_candidates_provider(key)
         if len(candidates_from_service) > 0:
             candidates = candidates_from_service
-            selected_id = self.check_selected_id(candidates, selected_id)  # TODO: check and set selected id
+            selected_id = self.check_selected_id(key, candidates, selected_id)  # TODO: check and set selected id
 
         component.options = list(map(lambda o: (o['name'], o['id']), candidates))
         component.value = selected_id
