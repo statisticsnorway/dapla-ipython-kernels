@@ -272,7 +272,7 @@ class DaplaDocumentationMagics(Magics):
             raise ValueError('candidates list was empty')
         for cand in candidates:
             if cand['id'] == selected_id:
-                return selected_id;
+                return selected_id
         # return first if selected id is not found
         first = candidates[0]['id']
         self._status = '{}" is removed! selecting:{}'.format(selected_id, first)
@@ -287,7 +287,7 @@ class DaplaDocumentationMagics(Magics):
         candidates_from_service = self._doc_template_candidates_provider(key)
         if len(candidates_from_service) > 0:
             candidates = candidates_from_service
-            selected_id = self.check_selected_id(key, candidates, selected_id)  # TODO: check and set selected id
+            selected_id = self.check_selected_id(key, candidates, selected_id)
 
         component.options = list(map(lambda o: (o['name'], o['id']), candidates))
         component.value = selected_id

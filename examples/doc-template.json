@@ -29,7 +29,7 @@
       },
       "population": {
         "concept-type": "Population",
-        "selected-id": "Population_DUMMY",
+        "selected-id": "id-1",
         "candidates": [
           {
             "id": "some-id-could-be-guid",
