@@ -161,24 +161,24 @@ class DaplaDocumentationMagics(Magics):
         def capitalize_with_camelcase(s):
             return s[0].upper() + s[1:]
 
+        def create_dropdown_box(dict, title, key):
+            inst_dropdown = self.create_widget(dict, key)
+            label = widgets.Label(value=title)
+            if self._status is None:
+                dropdown = [label, inst_dropdown]
+            else:
+                dropdown = [label, inst_dropdown, widgets.HTML(self._status)]
+                self._status = None
+            return widgets.Box(dropdown, layout=form_item_layout)
+
         for instanceVar in ds.doc['instanceVariables']:
             variable_titles.append(capitalize_with_camelcase(instanceVar['name']))
             form_items = []
 
             for key in instanceVar.keys():
-                if key == 'name':
-                    continue
-                inst_dropdown = self.create_widget(instanceVar, key)
-                label = widgets.Label(value=capitalize_with_camelcase(key))
-                if self._status is None:
-                    dropdown = [label, inst_dropdown]
-                else:
-                    dropdown = [label, inst_dropdown, widgets.HTML(self._status)]
-                    self._status = None
                 form_items.append(
-                    widgets.Box(
-                        dropdown,
-                        layout=form_item_layout))
+                    create_dropdown_box(instanceVar, capitalize_with_camelcase(key), key)
+                )
 
             variable_forms.append(widgets.Box(form_items, layout=widgets.Layout(
                 display='flex',
@@ -193,11 +193,9 @@ class DaplaDocumentationMagics(Magics):
             accordion.set_title(i, variable_titles[i])
 
         dataset_doc = widgets.Box([
-            widgets.Box([widgets.Label(value='Name'), self.create_widget(ds.doc, 'name')], layout=form_item_layout),
-            widgets.Box([widgets.Label(value='Description'), self.create_widget(ds.doc, 'description')],
-                        layout=form_item_layout),
-            widgets.Box([widgets.Label(value='UnitType'), self.create_widget(ds.doc, 'unitType')],
-                        layout=form_item_layout)
+            create_dropdown_box(ds.doc, 'Name', 'name'),
+            create_dropdown_box(ds.doc, 'Description', 'description'),
+            create_dropdown_box(ds.doc, 'UnitType', 'unitType'),
         ], layout=widgets.Layout(
             display='flex',
             flex_flow='column',
