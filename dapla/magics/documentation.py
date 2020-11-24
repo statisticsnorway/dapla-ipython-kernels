@@ -176,6 +176,8 @@ class DaplaDocumentationMagics(Magics):
             form_items = []
 
             for key in instanceVar.keys():
+                if key == 'name':
+                    continue
                 form_items.append(
                     create_dropdown_box(instanceVar, capitalize_with_camelcase(key), key)
                 )

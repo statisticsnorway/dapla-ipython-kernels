@@ -98,10 +98,10 @@ class DaplaDocumentationMagicsTest(unittest.TestCase):
                 'name': 'Test 2'
             }
         ]
-        self.assertEqual('id-1', self._magic.check_selected_id(candidates, 'id-1'))
-        self.assertEqual('id-2', self._magic.check_selected_id(candidates, 'id-2'))
+        self.assertEqual('id-1', self._magic.check_selected_id('type', candidates, 'id-1'))
+        self.assertEqual('id-2', self._magic.check_selected_id('type', candidates, 'id-2'))
 
-        self.assertEqual('id-1', self._magic.check_selected_id(candidates, 'missing-id'))
+        self.assertEqual('id-1', self._magic.check_selected_id('type', candidates, 'missing-id'))
 
 
 doc_template = {
@@ -156,4 +156,3 @@ Dropdown(index=2, options=(('name1', 'id1'), ('name2', 'id2'), ('name3', 'id3'))
 layout=Layout(display='flex', flex_flow='row', justify_content='space-between'))), \
 layout=Layout(align_items='stretch', display='flex', flex_flow='column', width='70%')),), selected_index=None, \
 _titles={'0': 'Iv1'})))\n"
-
