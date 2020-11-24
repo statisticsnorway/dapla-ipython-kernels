@@ -56,6 +56,7 @@ class DaplaDocumentationMagics(Magics):
         self._doc_template_provider = doc_template_provider
         self._doc_template_candidates_provider = doc_template_candidates_provider
         self._status = None
+        self._result_status = ''
 
     @staticmethod
     def ensure_valid_filename(fname):
@@ -168,6 +169,9 @@ class DaplaDocumentationMagics(Magics):
                 dropdown = [label, inst_dropdown]
             else:
                 dropdown = [label, inst_dropdown, widgets.HTML(self._status)]
+                self._result_status = \
+                    '<br/><i style="font-size:12px;color:red">' +\
+                    'Types have been removed from Concept! Please check each instance variable</i>'
                 self._status = None
             return widgets.Box(dropdown, layout=form_item_layout)
 
@@ -207,7 +211,7 @@ class DaplaDocumentationMagics(Magics):
         )
 
         display_objs = (widgets.HTML('<b style="font-size:14px">Dataset metadata</b>'), dataset_doc,
-                        widgets.HTML('<b style="font-size:14px">Instance variables</b>'), accordion)
+                        widgets.HTML('<b style="font-size:14px">Instance variables</b>{}'.format(self._result_status)), accordion)
 
         def on_button_clicked(b):
             with open(fname, 'w', encoding="utf-8") as f:
