@@ -145,7 +145,8 @@ class DatasetDocClient(AbstractClient):
         request_url = self._base_url + '/doc/candidates/' + concept_type
         response = requests.get(request_url,
                                 headers={
-                                    'Authorization': 'Bearer %s' % self._user_token_provider()
+                                    'Authorization': 'Bearer %s' % self._user_token_provider(),
+                                    'Cache-Control': '10'
                                 }, allow_redirects=False)
         handle_error_codes(response)
         return response.json()
