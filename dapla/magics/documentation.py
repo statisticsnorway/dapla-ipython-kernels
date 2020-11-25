@@ -89,6 +89,7 @@ class DaplaDocumentationMagics(Magics):
             --nofile  : Documentation is not stored to file
             -f <path> : Specifies a file path where the documentation is stored
         """
+        self._result_status = ''  # clear status
 
         opts, args = self.parse_options(line, 'f:', 'nofile')
         if not args:
@@ -293,7 +294,9 @@ class DaplaDocumentationMagics(Magics):
         candidates_from_service = self._doc_template_candidates_provider(key)
         if len(candidates_from_service) > 0:
             candidates = candidates_from_service
+            binding_key['candidates'] = candidates
             selected_id = self.check_selected_id(key, candidates, selected_id)
+            binding_key['selected-id'] = selected_id
 
         component.options = list(map(lambda o: (o['name'], o['id']), candidates))
         component.value = selected_id
