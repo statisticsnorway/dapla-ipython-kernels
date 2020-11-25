@@ -26,7 +26,11 @@ class DaplaDocumentationMagicsTest(unittest.TestCase):
 
     def setUp(self):
         doc_template_client = DatasetDocClient(lambda: 'mock-user-token', 'http://mock.no/')
-        self._magic = DaplaDocumentationMagics(None, doc_template_client.get_doc_template)
+        self._magic = DaplaDocumentationMagics(
+            None,
+            doc_template_client.get_doc_template,
+            doc_template_client.get_doc_template_candidates
+        )
         self._magic.shell = MagicMock()
         self._magic.display = MagicMock()
 
@@ -47,6 +51,8 @@ class DaplaDocumentationMagicsTest(unittest.TestCase):
     def test_generate_doc_template(self):
         responses.add(responses.POST, 'http://mock.no/doc/template',
                       json=doc_template, status=200)
+        responses.add(responses.GET, 'http://mock.no/doc/candidates/unitType?unitType',
+                      json=[], status=200)
         output_file = "{}/output/docs/mockfile.json".format(dirname(__file__))
         # Mock that the user inputs a file name
         self._magic.shell.ev = MagicMock(return_value=output_file)
@@ -61,6 +67,9 @@ class DaplaDocumentationMagicsTest(unittest.TestCase):
     def test_generate_doc_template_no_file(self):
         responses.add(responses.POST, 'http://mock.no/doc/template',
                       json=doc_template, status=200)
+        responses.add(responses.GET, 'http://mock.no/doc/candidates/UnitType',
+                      json=[], status=200)
+
         # Run the magic
         self._magic.document('--nofile ds')
         # Capture the display output
@@ -77,6 +86,22 @@ class DaplaDocumentationMagicsTest(unittest.TestCase):
 
         output = map_doc_output(doc_template)
         self.assertEqual(expected_doc, output)
+
+    def test_check_selected_id(self):
+        candidates = [
+            {
+                'id': 'id-1',
+                'name': 'Test 1'
+            },
+            {
+                'id': 'id-2',
+                'name': 'Test 2'
+            }
+        ]
+        self.assertEqual('id-1', self._magic.check_selected_id('type', candidates, 'id-1'))
+        self.assertEqual('id-2', self._magic.check_selected_id('type', candidates, 'id-2'))
+
+        self.assertEqual('id-1', self._magic.check_selected_id('type', candidates, 'missing-id'))
 
 
 doc_template = {
@@ -131,4 +156,3 @@ Dropdown(index=2, options=(('name1', 'id1'), ('name2', 'id2'), ('name3', 'id3'))
 layout=Layout(display='flex', flex_flow='row', justify_content='space-between'))), \
 layout=Layout(align_items='stretch', display='flex', flex_flow='column', width='70%')),), selected_index=None, \
 _titles={'0': 'Iv1'})))\n"
-

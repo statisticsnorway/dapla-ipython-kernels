@@ -50,10 +50,13 @@ def map_doc_output(doc_json):
 class DaplaDocumentationMagics(Magics):
     """Magics related to documentation management (loading, saving, editing, ...)."""
 
-    def __init__(self, shell, doc_template_provider):
+    def __init__(self, shell, doc_template_provider, doc_template_candidates_provider):
         # You must call the parent constructor
         super(DaplaDocumentationMagics, self).__init__(shell)
         self._doc_template_provider = doc_template_provider
+        self._doc_template_candidates_provider = doc_template_candidates_provider
+        self._status = None
+        self._result_status = ''
 
     @staticmethod
     def ensure_valid_filename(fname):
@@ -86,6 +89,7 @@ class DaplaDocumentationMagics(Magics):
             --nofile  : Documentation is not stored to file
             -f <path> : Specifies a file path where the documentation is stored
         """
+        self._result_status = ''  # clear status
 
         opts, args = self.parse_options(line, 'f:', 'nofile')
         if not args:
@@ -159,6 +163,19 @@ class DaplaDocumentationMagics(Magics):
         def capitalize_with_camelcase(s):
             return s[0].upper() + s[1:]
 
+        def create_dropdown_box(dict, title, key):
+            inst_dropdown = self.create_widget(dict, key)
+            label = widgets.Label(value=title)
+            if self._status is None:
+                dropdown = [label, inst_dropdown]
+            else:
+                dropdown = [label, inst_dropdown, widgets.HTML(self._status)]
+                self._result_status = \
+                    '<br/><i style="font-size:12px;color:red">' +\
+                    'Types have been removed from Concept! Please check each instance variable</i>'
+                self._status = None
+            return widgets.Box(dropdown, layout=form_item_layout)
+
         for instanceVar in ds.doc['instanceVariables']:
             variable_titles.append(capitalize_with_camelcase(instanceVar['name']))
             form_items = []
@@ -167,8 +184,8 @@ class DaplaDocumentationMagics(Magics):
                 if key == 'name':
                     continue
                 form_items.append(
-                    widgets.Box([widgets.Label(value=capitalize_with_camelcase(key)), self.create_widget(instanceVar, key)],
-                                layout=form_item_layout))
+                    create_dropdown_box(instanceVar, capitalize_with_camelcase(key), key)
+                )
 
             variable_forms.append(widgets.Box(form_items, layout=widgets.Layout(
                 display='flex',
@@ -183,21 +200,19 @@ class DaplaDocumentationMagics(Magics):
             accordion.set_title(i, variable_titles[i])
 
         dataset_doc = widgets.Box([
-            widgets.Box([widgets.Label(value='Name'), self.create_widget(ds.doc, 'name')], layout=form_item_layout),
-            widgets.Box([widgets.Label(value='Description'), self.create_widget(ds.doc, 'description')],
-                        layout=form_item_layout),
-            widgets.Box([widgets.Label(value='UnitType'), self.create_widget(ds.doc, 'unitType')],
-                        layout=form_item_layout)
-            ], layout=widgets.Layout(
-                display='flex',
-                flex_flow='column',
-                align_items='stretch',
-                width='70%'
-            )
+            create_dropdown_box(ds.doc, 'Name', 'name'),
+            create_dropdown_box(ds.doc, 'Description', 'description'),
+            create_dropdown_box(ds.doc, 'UnitType', 'unitType'),
+        ], layout=widgets.Layout(
+            display='flex',
+            flex_flow='column',
+            align_items='stretch',
+            width='70%'
+        )
         )
 
         display_objs = (widgets.HTML('<b style="font-size:14px">Dataset metadata</b>'), dataset_doc,
-                        widgets.HTML('<b style="font-size:14px">Instance variables</b>'), accordion)
+                        widgets.HTML('<b style="font-size:14px">Instance variables</b>{}'.format(self._result_status)), accordion)
 
         def on_button_clicked(b):
             with open(fname, 'w', encoding="utf-8") as f:
@@ -259,13 +274,35 @@ class DaplaDocumentationMagics(Magics):
         component.observe(on_change, names='value')
         return component
 
+    def check_selected_id(self, type, candidates, selected_id):
+        if len(candidates) == 0:
+            raise ValueError('candidates list was empty')
+        for cand in candidates:
+            if cand['id'] == selected_id:
+                return selected_id
+        # return first if selected id is not found
+        first = candidates[0]['id']
+        self._status = '{}" is removed! selecting:{}'.format(selected_id, first)
+        return first
+
     def create_candidate_selector(self, binding, key):
         component = widgets.Dropdown()
-        component.options = list(map(lambda o: (o['name'], o['id']), binding[key]['candidates']))
-        component.value = binding[key]['selected-id']
+        binding_key = binding[key]
+        candidates = binding_key['candidates']
+        selected_id = binding_key['selected-id']
+
+        candidates_from_service = self._doc_template_candidates_provider(key)
+        if len(candidates_from_service) > 0:
+            candidates = candidates_from_service
+            binding_key['candidates'] = candidates
+            selected_id = self.check_selected_id(key, candidates, selected_id)
+            binding_key['selected-id'] = selected_id
+
+        component.options = list(map(lambda o: (o['name'], o['id']), candidates))
+        component.value = selected_id
 
         def on_change(v):
-            binding[key]['selected-id'] = v['new']
+            binding_key['selected-id'] = v['new']
 
         component.observe(on_change, names='value')
         return component
@@ -283,6 +320,6 @@ def load_ipython_extension(ipython):
     doc_template_client = DatasetDocClient(AuthClient.get_access_token, os.environ['DOC_TEMPLATE_URL'])
     # This class must be registered with a manually created instance,
     # since its constructor has different arguments from the default:
-    magics = DaplaDocumentationMagics(ipython, doc_template_client.get_doc_template)
+    magics = DaplaDocumentationMagics(ipython, doc_template_client.get_doc_template,
+                                      doc_template_client.get_doc_template_candidates)
     ipython.register_magics(magics)
-

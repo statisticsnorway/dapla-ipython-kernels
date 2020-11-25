@@ -125,6 +125,32 @@ class DatasetDocClient(AbstractClient):
         handle_error_codes(response)
         return response.json()
 
+    def map_type(self, type):
+        map = {
+            'unitType': 'UnitType',
+            'representedVariable': 'RepresentedVariable',
+            'population': 'Population',
+            # This will make dataset-doc-service fetch both EnumeratedValueDomain and DescribedValueDomain
+            'sentinelValueDomain': 'SentinelValueDomain'
+        }
+        if type in map:
+            return map[type]
+        return None
+
+    def get_doc_template_candidates(self, type):
+        concept_type = self.map_type(type)
+        if concept_type is None:
+            return ""
+
+        request_url = self._base_url + '/doc/candidates/' + concept_type
+        response = requests.get(request_url,
+                                headers={
+                                    'Authorization': 'Bearer %s' % self._user_token_provider(),
+                                    'Cache-Control': '10'
+                                }, allow_redirects=False)
+        handle_error_codes(response)
+        return response.json()
+
     def get_doc_validation(self, spark_schema, doc_template):
         request_url = self._base_url + '/doc/validate'
         request = {
@@ -153,8 +179,6 @@ class DatasetDocClient(AbstractClient):
         handle_error_codes(response)
         return response.json()
 
-
-
     def get_lineage_template(self, output_schema, input_schema_map, use_simple=False):
         request_url = self._base_url + '/lineage/template'
 
@@ -164,6 +188,7 @@ class DatasetDocClient(AbstractClient):
                 "schemaType": "SPARK",
                 "timestamp": x[1]['timestamp'],
             })
+
         request = {
             "schema": output_schema['schema'],
             "timestamp": output_schema['timestamp'],
