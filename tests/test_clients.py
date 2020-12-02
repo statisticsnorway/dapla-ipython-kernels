@@ -1,7 +1,7 @@
-from dapla.services.clients import DataAccessClient, DataAccessError
+from dapla.services.clients import DataAccessClient, DataAccessError, DatasetDocClient
 import responses
 import unittest
-
+import time
 
 class ClientsTest(unittest.TestCase):
     @responses.activate
@@ -26,6 +26,16 @@ class ClientsTest(unittest.TestCase):
         with self.assertRaisesRegex(DataAccessError, 'Fant ikke datasett'):
             client = DataAccessClient(lambda: 'mock-user-token', 'http://mock.no/')
             client.read_location('/user/test')
+
+    @unittest.skip  # for testing against local running service
+    def test_dataset_doc_client(self):
+        client = DatasetDocClient(lambda: 'mock-user-token', 'http://localhost:10190/')
+
+        for i in range(20):
+            candidates = client.get_doc_template_candidates('unitType')
+            print(candidates)
+            time.sleep(0.2)
+
 
 
 
