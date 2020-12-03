@@ -1,6 +1,8 @@
 import requests
+import requests_cache
 import json
 
+requests_cache.install_cache('client_cache', backend='memory', expire_after=2)
 
 class AbstractClient:
     def __init__(
@@ -145,8 +147,7 @@ class DatasetDocClient(AbstractClient):
         request_url = self._base_url + '/doc/candidates/' + concept_type
         response = requests.get(request_url,
                                 headers={
-                                    'Authorization': 'Bearer %s' % self._user_token_provider(),
-                                    'Cache-Control': '10'
+                                    'Authorization': 'Bearer %s' % self._user_token_provider()
                                 }, allow_redirects=False)
         handle_error_codes(response)
         return response.json()

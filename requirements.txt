@@ -4,6 +4,7 @@ jupyterhub
 oauthenticator
 jwt
 requests
+requests-cache
 responses
 ipykernel>=4.2.2
 notebook>=4.2
