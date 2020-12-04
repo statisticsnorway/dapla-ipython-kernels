@@ -81,10 +81,8 @@ class DataSourceWriter:
         self._metadata_publisher_client.data_changed(gcs_path + "/.dataset-meta.json.sign")
 
         # Update catalog
-        self._catalog_client.write_dataset(path, version, valuation, state,
-                                           location_response['parentUri'],
-                                           location_response["validMetadataJson"],
-                                           location_response["metadataSignature"])
+        self._catalog_client.write_dataset(location_response["allValidMetadataJson"],
+                                           location_response["allMetadataSignature"])
 
     def _get_fs(self, location_response, path, version):
         if not location_response['accessAllowed']:

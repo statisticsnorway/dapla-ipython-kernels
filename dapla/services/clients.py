@@ -26,20 +26,11 @@ class CatalogClient(AbstractClient):
         handle_error_codes(response)
         return response.json()
 
-    def write_dataset(self, path, version, valuation, state, parentUri, datasetMetaBytes, datasetMetaSignatureBytes):
+    def write_dataset(self, dataset_meta_all_bytes, dataset_meta_all_signature_bytes):
         catalog_url = self._base_url + '/catalog/write'
         request = {
-            "dataset": {
-                "id": {
-                    "path": path,
-                    "timestamp": version
-                },
-                "valuation": valuation,
-                "state": state,
-                "parentUri": parentUri
-            },
-            "datasetMetaBytes": datasetMetaBytes,
-            "datasetMetaSignatureBytes": datasetMetaSignatureBytes
+            "datasetMetaAllBytes": dataset_meta_all_bytes,
+            "datasetMetaAllSignatureBytes": dataset_meta_all_signature_bytes
         }
         response = requests.post(catalog_url, json=request,
                                  headers={

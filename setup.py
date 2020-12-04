@@ -16,6 +16,7 @@ def read(filename):
 DEPENDENCIES = [
     'jupyterhub',
     'requests',
+    'requests-cache',
     'responses',
     'notebook>=4.2',
     'tornado>=4',
