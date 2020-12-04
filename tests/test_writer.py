@@ -36,7 +36,9 @@ class WriterTest(unittest.TestCase):
             'parentUri': 'file://{}'.format(os.path.dirname(__file__)),
             'accessToken': 'mock-access-token',
             'validMetadataJson': base64.b64encode(json.dumps({'key': 'value'}).encode('ascii')).decode('ascii'),
-            'metadataSignature': base64.b64encode(json.dumps({'key': 'value'}).encode('ascii')).decode('ascii')
+            'allValidMetadataJson': base64.b64encode(json.dumps({'key': 'value'}).encode('ascii')).decode('ascii'),
+            'metadataSignature': base64.b64encode(json.dumps({'key': 'value'}).encode('ascii')).decode('ascii'),
+            'allMetadataSignature': base64.b64encode(json.dumps({'key': 'value'}).encode('ascii')).decode('ascii')
         }
         responses.add(responses.POST, 'http://mock.no/rpc/DataAccessService/writeLocation',
                       json=json_response, status=200)
