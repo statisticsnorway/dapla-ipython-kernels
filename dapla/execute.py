@@ -5,10 +5,25 @@ from dapla.services.reader import DataSourceReader
 from dapla.services.writer import DataSourceWriter
 
 
-def read_pandas(path):
+def read_pandas(path, columns=None):
+    """
+    Read Parquet data from a path in Dapla.
+
+    Parameters
+    ----------
+    path : str
+        A path that will be mapped to a GCS path in Dapla
+    columns : List[str], optional
+        Subset of columns to read.
+
+    Returns
+    -------
+    pyarrow.Table
+        Content as a table (of columns).
+    """
     reader = DataSourceReader(AuthClient.get_access_token, os.environ['DATA_ACCESS_URL'],  os.environ['CATALOG_URL'])
     try:
-        return reader.read(path)
+        return reader.read(path, columns)
     except AuthError as err:
         err.print_warning()
 
