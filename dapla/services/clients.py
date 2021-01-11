@@ -195,6 +195,15 @@ class DatasetDocClient(AbstractClient):
         handle_error_codes(response)
         return response.json()
 
+    def get_meta(self, path):
+        request_url = self._base_url + '/doc/info?path=' + path
+        response = requests.get(request_url,
+                                headers={
+                                    'Authorization': 'Bearer %s' % self._user_token_provider()
+                                }, allow_redirects=False)
+        handle_error_codes(response)
+        return response.json()
+
 
 def handle_error_codes(response):
     if response.status_code == 401:

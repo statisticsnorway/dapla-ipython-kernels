@@ -3,6 +3,7 @@ import os
 from dapla.jupyterextensions.authextension import AuthClient, AuthError
 from dapla.services.reader import DataSourceReader
 from dapla.services.writer import DataSourceWriter
+from dapla.services.clients import DatasetDocClient
 
 
 def read_pandas(path, columns=None):
@@ -55,5 +56,13 @@ def write_pandas(df, path, **option_kwargs):
     )
     try:
         writer.write(df, path, **option_kwargs)
+    except AuthError as err:
+        err.print_warning()
+
+
+def show_meta(path):
+    dataset_doc = DatasetDocClient(AuthClient.get_access_token, os.environ['DOC_TEMPLATE_URL'])
+    try:
+        return dataset_doc.get_meta(path)
     except AuthError as err:
         err.print_warning()
