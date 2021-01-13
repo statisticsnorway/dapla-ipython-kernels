@@ -61,7 +61,7 @@ def should_reload_token(conf):
         # First time fetching the token
         return True
 
-    access_token = jwt.decode(spark_token, verify=False)
+    access_token = jwt.decode(spark_token, options={"verify_signature": False})
     diff_access = access_token['exp'] - time.time()
     # Should fetch new token from server if the access token within the given buffer
     if diff_access > int(os.environ['SPARK_USER_TOKEN_EXPIRY_BUFFER_SECS']):
