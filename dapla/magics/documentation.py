@@ -171,7 +171,7 @@ class DaplaDocumentationMagics(Magics):
             else:
                 dropdown = [label, inst_dropdown, widgets.HTML(self._status)]
                 self._result_status = \
-                    '<br/><i style="font-size:12px;color:red">' +\
+                    '<br/><i style="font-size:12px;color:red">' + \
                     'Types have been removed from Concept! Please check each instance variable</i>'
                 self._status = None
             return widgets.Box(dropdown, layout=form_item_layout)
@@ -212,7 +212,8 @@ class DaplaDocumentationMagics(Magics):
         )
 
         display_objs = (widgets.HTML('<b style="font-size:14px">Dataset metadata</b>'), dataset_doc,
-                        widgets.HTML('<b style="font-size:14px">Instance variables</b>{}'.format(self._result_status)), accordion)
+                        widgets.HTML('<b style="font-size:14px">Instance variables</b>{}'.format(self._result_status)),
+                        accordion)
 
         def on_button_clicked(b):
             with open(fname, 'w', encoding="utf-8") as f:
@@ -289,8 +290,11 @@ class DaplaDocumentationMagics(Magics):
     def create_candidate_selector(self, binding, key):
         component = widgets.Dropdown()
         binding_key = binding[key]
-        candidates = binding_key['candidates']
+        candidates = []
         selected_id = binding_key['selected-id']
+        if binding_key.__contains__('smart-match-id'):
+            smart_match_id = binding_key['smart-match-id']
+            selected_id = smart_match_id  # TODO: show this on control
 
         candidates_from_service = self._doc_template_candidates_provider(key)
         if len(candidates_from_service) > 0:
