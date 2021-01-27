@@ -57,6 +57,7 @@ class DaplaDocumentationMagics(Magics):
         self._doc_template_candidates_provider = doc_template_candidates_provider
         self._status = None
         self._result_status = ''
+        self._is_smart_match = ''  # TODO: find a better solutions to this
 
     @staticmethod
     def ensure_valid_filename(fname):
@@ -167,7 +168,8 @@ class DaplaDocumentationMagics(Magics):
             inst_dropdown = self.create_widget(dict, key)
             label = widgets.Label(value=title)
             if self._status is None:
-                dropdown = [label, inst_dropdown]
+                dropdown = [label, inst_dropdown, widgets.HTML(self._is_smart_match)]
+                self._is_smart_match = ''
             else:
                 dropdown = [label, inst_dropdown, widgets.HTML(self._status)]
                 self._result_status = \
@@ -295,6 +297,7 @@ class DaplaDocumentationMagics(Magics):
         if binding_key.__contains__('smart-match-id'):
             smart_match_id = binding_key['smart-match-id']
             selected_id = smart_match_id  # TODO: show this on control
+            self._is_smart_match = 'sm'
 
         candidates_from_service = self._doc_template_candidates_provider(key)
         if len(candidates_from_service) > 0:
