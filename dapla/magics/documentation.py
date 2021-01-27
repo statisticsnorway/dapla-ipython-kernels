@@ -227,17 +227,18 @@ class DaplaDocumentationMagics(Magics):
             self.display(widgets.VBox(display_objs))
 
     def create_widget(self, binding, key):
-        if isinstance(binding[key], str):
+        binding_key = binding[key]
+        if isinstance(binding_key, str):
             return self.create_text_input(binding, key)
-        elif isinstance(binding[key], bool):
+        elif isinstance(binding_key, bool):
             return self.create_checkbox_input(binding, key)
-        elif isinstance(binding[key], dict) and binding[key].__contains__('enums'):
+        elif isinstance(binding_key, dict) and binding_key.__contains__('enums'):
             return self.create_enum_selector(binding, key)
-        elif isinstance(binding[key], dict) and binding[key].__contains__('candidates'):
+        elif isinstance(binding_key, dict) and binding_key.__contains__('candidates'):
             return self.create_candidate_selector(binding, key)
         else:
             raise UsageError("Unable to create a widget for '{}' with value '{}'\n{}"
-                             .format(key, binding[key], json.dumps(binding, indent=2)))
+                             .format(key, binding_key, json.dumps(binding, indent=2)))
 
     def create_text_input(self, binding, key):
         if key == 'description':
