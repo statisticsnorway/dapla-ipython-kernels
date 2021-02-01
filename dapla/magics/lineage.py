@@ -74,6 +74,8 @@ class DaplaLineageMagics(Magics):
         self._declared_outputs = {}
         self._input_trace = {}
         self._output_trace = {}
+        self._show_warning_input = True
+        self._show_warning_output = True
 
     @staticmethod
     def ensure_valid_filename(fname):
@@ -91,6 +93,28 @@ class DaplaLineageMagics(Magics):
     @staticmethod
     def current_milli_time():
         return int(round(time.time() * 1000))
+
+    @line_magic
+    def input_warning(self, line):
+        from IPython.core.display import HTML
+        if any(x in line for x in ['on', 'True', '1']):
+            self._show_warning_input = True
+        elif any(x in line for x in ['off', 'False', '0']):
+            self._show_warning_input = False
+        elif line is not '':
+            self.display(HTML("Unrecognized option: {}".format(line)))
+        self.display(HTML("Show input declaration warnings: <b>{}</b>".format(self._show_warning_input)))
+
+    @line_magic
+    def output_warning(self, line):
+        from IPython.core.display import HTML
+        if any(x in line for x in ['on', 'True', '1']):
+            self._show_warning_output = True
+        elif any(x in line for x in ['off', 'False', '0']):
+            self._show_warning_output = False
+        elif line is not '':
+            self.display(HTML("Unrecognized option: {}".format(line)))
+        self.display(HTML("Show output declaration warnings: <b>{}</b>".format(self._show_warning_output)))
 
     @cell_magic
     def input(self, line, cell):
@@ -133,10 +157,10 @@ class DaplaLineageMagics(Magics):
             self._input_trace[path] = {}
         else:
             self._input_trace[path] = {"schema": schema, "timestamp": version}
-        if path not in self._declared_inputs:
-            self.show_missing_declaration_warning(path, self.input.__name__)
-        else:
+        if path in self._declared_inputs:
             self._declared_inputs[path] = self._input_trace[path]
+        elif self._show_warning_input:
+            self.show_missing_declaration_warning(path, self.input.__name__)
 
     @line_magic
     def on_output_save(self, line):
@@ -149,10 +173,10 @@ class DaplaLineageMagics(Magics):
             self._output_trace[path] = {}
         else:
             self._output_trace[path] = {"schema": schema, "timestamp": version}
-        if path not in self._declared_outputs:
-            self.show_missing_declaration_warning(path, self.output.__name__)
-        else:
+        if path in self._declared_outputs:
             self._declared_outputs[path] = self._output_trace[path]
+        elif self._show_warning_output:
+            self.show_missing_declaration_warning(path, self.output.__name__)
 
     @line_magic
     def lineage_tree(self, line):
