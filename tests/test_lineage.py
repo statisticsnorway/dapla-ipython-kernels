@@ -183,6 +183,26 @@ class DaplaLineageMagicsTest(unittest.TestCase):
         regexp = "<b>\w+</b>|Label\(value='/\w+/\w+'\)|Checkbox\(value=\w{4}\w?, description='\w+(?:.{4})?'"
         return re.findall(regexp, controls)
 
+    def test_parse_options(self):
+        opts, args = self._magic.parse_options('', '', 'append')
+        self.assertFalse('append' in opts)
+        opts, args = self._magic.parse_options('--append', '', 'append')
+        self.assertTrue('append' in opts)
+
+    def test_disable_input_warning(self):
+        self.assertTrue(self._magic._show_warning_input)
+        self._magic.input_warning('off')
+        self.assertFalse(self._magic._show_warning_input)
+        self._magic.input_warning('on')
+        self.assertTrue(self._magic._show_warning_input)
+
+    def test_disable_output_warning(self):
+        self.assertTrue(self._magic._show_warning_output)
+        self._magic.output_warning('False')
+        self.assertFalse(self._magic._show_warning_output)
+        self._magic.output_warning('True')
+        self.assertTrue(self._magic._show_warning_output)
+
     def test_lineage_output(self):
         with open(resolve_filename('selected_innskudd_lineage.json'), 'r') as f:
             lineage_template = json.load(f)
