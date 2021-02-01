@@ -96,6 +96,9 @@ class DaplaLineageMagics(Magics):
 
     @line_magic
     def input_warning(self, line):
+        """
+        Toggle whether or not to display a warning when an input dataset is not declared via %%input
+        """
         from IPython.core.display import HTML
         if any(x in line for x in ['on', 'True', '1']):
             self._show_warning_input = True
@@ -107,6 +110,9 @@ class DaplaLineageMagics(Magics):
 
     @line_magic
     def output_warning(self, line):
+        """
+        Toggle whether or not to display a warning when an output dataset is not declared via %%output
+        """
         from IPython.core.display import HTML
         if any(x in line for x in ['on', 'True', '1']):
             self._show_warning_output = True
