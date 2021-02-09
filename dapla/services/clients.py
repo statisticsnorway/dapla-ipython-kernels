@@ -104,12 +104,13 @@ class MetadataPublisherClient(AbstractClient):
 
 class DatasetDocClient(AbstractClient):
 
-    def get_doc_template(self, spark_schema, use_simple):
+    def get_doc_template(self, spark_schema, use_simple, datasetPath):
         request_url = self._base_url + '/doc/template'
         request = {
             "schema": spark_schema,
             "schemaType": "SPARK",
-            "useSimpleFiltering": use_simple
+            "useSimpleFiltering": use_simple,
+            "datasetPath": datasetPath
         }
         response = requests.post(request_url, json=request,
                                  headers={

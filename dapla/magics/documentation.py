@@ -2,15 +2,16 @@
 # itself to be running already.  It only creates the magics subclass but
 # doesn't instantiate it yet.
 from __future__ import print_function
-from IPython.core.magic import (Magics, magics_class, line_magic)
+from IPython.core.magic import (Magics, magics_class, line_magic, cell_magic)
 from IPython.core.error import UsageError, StdinNotImplementedError
 import os
 import json
 from pyspark.sql import DataFrame
 import ipywidgets as widgets
+from IPython import get_ipython
 from ..services.clients import DatasetDocClient
 from ..jupyterextensions.authextension import AuthClient, AuthError
-
+from ..magics.lineage import find_dataset_path
 
 def extract_doc(df):
     if not isinstance(df, DataFrame):
@@ -58,6 +59,7 @@ class DaplaDocumentationMagics(Magics):
         self._status = None
         self._result_status = ''
         self._is_smart_match = ''  # TODO: find a better solutions to this
+        self._declared_outputs = {}
 
     @staticmethod
     def ensure_valid_filename(fname):
@@ -76,6 +78,10 @@ class DaplaDocumentationMagics(Magics):
     def clear_output():
         from IPython.display import clear_output
         clear_output()
+
+    @line_magic
+    def find_path(self, dataset_name):
+        return find_dataset_path(dataset_name)
 
     @line_magic
     def document(self, line):
@@ -142,12 +148,15 @@ class DaplaDocumentationMagics(Magics):
                         ds.doc = json.load(f)
                 else:
                     # Generate doc from template and prepare file
-                    ds.doc = self._doc_template_provider(ds.schema.json(), False)
+                    dataset_path = find_dataset_path(args)
+                    ds.doc = self._doc_template_provider(ds.schema.json(), False, dataset_path)
                     with open(fname, 'w', encoding="utf-8") as f:
                         json.dump(ds.doc, f)
             else:
                 # Generate doc from template
-                ds.doc = self._doc_template_provider(ds.schema.json(), False)
+                dataset_path = find_dataset_path(args)
+                ds.doc = self._doc_template_provider(ds.schema.json(), False, dataset_path)
+
         except AuthError as err:
             err.print_warning()
             return
@@ -270,7 +279,10 @@ class DaplaDocumentationMagics(Magics):
     def create_enum_selector(self, binding, key):
         component = widgets.Dropdown()
         component.options = binding[key]['enums']
-        component.value = binding[key]['selected-enum']
+        key_selected_enum = binding[key]['selected-enum']
+        if key_selected_enum == "":
+            key_selected_enum = "MEASURE"
+        component.value = key_selected_enum
 
         def on_change(v):
             binding[key]['selected-enum'] = v['new']
@@ -294,7 +306,7 @@ class DaplaDocumentationMagics(Magics):
         binding_key = binding[key]
         candidates = []
         selected_id = binding_key['selected-id']
-        if binding_key.__contains__('smart-match-id'):
+        if binding_key.__contains__('smart-match-id') and binding_key['smart-match-id'] != "unknown":
             smart_match_id = binding_key['smart-match-id']
             selected_id = smart_match_id  # TODO: show this on control
             self._is_smart_match = 'sm'
