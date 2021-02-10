@@ -1,4 +1,4 @@
-__version__ = '0.2.20'
+__version__ = '0.2.21'
 __author__ = 'Statistics Norway (ssb.no)'
 __all__ = []
 
