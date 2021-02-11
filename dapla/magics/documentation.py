@@ -12,6 +12,7 @@ from ..services.clients import DatasetDocClient
 from ..jupyterextensions.authextension import AuthClient, AuthError
 from ..magics.lineage import find_dataset_path
 
+
 def extract_doc(df):
     if not isinstance(df, DataFrame):
         raise UsageError("The variable '{}' is not a pyspark DataFrame".format(df))
@@ -297,16 +298,17 @@ class DaplaDocumentationMagics(Magics):
         for cand in candidates:
             if cand['id'] == selected_id:
                 return selected_id
-        # return first if selected id is not found
+
+        # add please select to candidates and make this selected
         candidates.append({
             'id': 'please-select',
             'name': 'please select'
         })
-
         first = 'please-select'  # candidates[0]['id']
 
-        #  We need to detect if this happens when loading a previous selection for file...
-        #  self._status = '{}" is removed! selecting:{}'.format(selected_id, first)
+        if selected_id != "":  # we have an id but it have been removed from candidates (Concept-lds)
+            self._status = '{}" is removed! selecting:{}'.format(selected_id, first)
+
         return first
 
     def create_candidate_selector(self, binding, key):
