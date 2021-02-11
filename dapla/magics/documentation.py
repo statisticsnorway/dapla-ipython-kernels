@@ -299,15 +299,15 @@ class DaplaDocumentationMagics(Magics):
             if cand['id'] == selected_id:
                 return selected_id
 
+        if selected_id != "":  # we have an id but it have been removed from candidates (Concept-lds)
+            self._status = '{}" is removed! please make a new selection'.format(selected_id)
+
         # add please select to candidates and make this selected
         candidates.append({
             'id': 'please-select',
             'name': 'please select'
         })
         first = 'please-select'  # candidates[0]['id']
-
-        if selected_id != "":  # we have an id but it have been removed from candidates (Concept-lds)
-            self._status = '{}" is removed! selecting:{}'.format(selected_id, first)
 
         return first
 
@@ -316,7 +316,7 @@ class DaplaDocumentationMagics(Magics):
         binding_key = binding[key]
         candidates = []
         selected_id = binding_key['selected-id']
-        if binding_key.__contains__('smart-match-id') and binding_key['smart-match-id'] != "unknown":
+        if binding_key.__contains__('smart-match-id') and binding_key['smart-match-id'] != "":
             smart_match_id = binding_key['smart-match-id']
             selected_id = smart_match_id  # TODO: show this on control
             self._is_smart_match = 'sm'
