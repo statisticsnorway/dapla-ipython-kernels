@@ -303,7 +303,7 @@ class DaplaDocumentationMagics(Magics):
             self._status = '{}" is removed! please make a new selection'.format(selected_id)
 
         # add please select to candidates and make this selected
-        candidates.append({
+        candidates.insert(0, {
             'id': 'please-select',
             'name': 'please select'
         })
