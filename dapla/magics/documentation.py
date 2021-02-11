@@ -8,7 +8,6 @@ import os
 import json
 from pyspark.sql import DataFrame
 import ipywidgets as widgets
-from IPython import get_ipython
 from ..services.clients import DatasetDocClient
 from ..jupyterextensions.authextension import AuthClient, AuthError
 from ..magics.lineage import find_dataset_path
@@ -81,6 +80,8 @@ class DaplaDocumentationMagics(Magics):
 
     @line_magic
     def find_path(self, dataset_name):
+        """For testing, can be removed
+        """
         return find_dataset_path(dataset_name)
 
     @line_magic
@@ -297,8 +298,15 @@ class DaplaDocumentationMagics(Magics):
             if cand['id'] == selected_id:
                 return selected_id
         # return first if selected id is not found
-        first = candidates[0]['id']
-        self._status = '{}" is removed! selecting:{}'.format(selected_id, first)
+        candidates.append({
+            'id': 'please-select',
+            'name': 'please select'
+        })
+
+        first = 'please-select'  # candidates[0]['id']
+
+        #  We need to detect if this happens when loading a previous selection for file...
+        #  self._status = '{}" is removed! selecting:{}'.format(selected_id, first)
         return first
 
     def create_candidate_selector(self, binding, key):
