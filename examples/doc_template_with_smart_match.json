@@ -9,9 +9,11 @@
   "instanceVariables": [
     {
       "name": "kontonummer",
-      "description": "vilk\u00e5rlig lang sekvens av tegn inkludert aksenter og spesielle tegn fra standardiserte tegnsett",
+      "description": "",
+      "smart-description": "smart-description",
       "dataStructureComponentType": {
-        "selected-enum": "MEASURE",
+        "selected-enum": "",
+        "smart-enum": "IDENTIFIER",
         "enums": [
           "IDENTIFIER",
           "MEASURE",
@@ -20,17 +22,20 @@
       },
       "population": {
         "concept-type": "Population",
-        "selected-id": "Population_DUMMY",
+        "selected-id": "",
+        "smart-match-id": "Population_DUMMY",
         "candidates": []
       },
       "representedVariable": {
         "concept-type": "RepresentedVariable",
-        "selected-id": "some-id-could-be-guid",
+        "selected-id": "",
+        "smart-match-id": "id-2",
         "candidates": []
       },
       "sentinelValueDomain": {
         "concept-type": "EnumeratedValueDomain,DescribedValueDomain",
-        "selected-id": "EnumeratedValueDomain_DUMMY-id",
+        "selected-id": "",
+        "smart-match-id": "EnumeratedValueDomain_DUMMY-id",
         "candidates": []
       }
     },

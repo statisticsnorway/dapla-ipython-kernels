@@ -194,7 +194,7 @@ class DaplaDocumentationMagics(Magics):
             form_items = []
 
             for key in instanceVar.keys():
-                if key == 'name':
+                if key == 'name' or key == 'smart-description':
                     continue
                 form_items.append(
                     create_dropdown_box(instanceVar, capitalize_with_camelcase(key), key)
@@ -255,12 +255,18 @@ class DaplaDocumentationMagics(Magics):
                              .format(key, binding_key, json.dumps(binding, indent=2)))
 
     def create_text_input(self, binding, key):
+        value = binding[key]
         if key == 'description':
+            if len(value) == 0 \
+                    and binding.__contains__('smart-description') \
+                    and binding['smart-description'] is not None:
+                value = binding['smart-description']
+                self._is_smart_match = 'sm'
             component = widgets.Textarea()
         else:
             component = widgets.Text()
 
-        component.value = binding[key]
+        component.value = value
 
         def on_change(v):
             binding[key] = v['new']
