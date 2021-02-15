@@ -280,10 +280,19 @@ class DaplaDocumentationMagics(Magics):
 
     def create_enum_selector(self, binding, key):
         component = widgets.Dropdown()
-        component.options = binding[key]['enums']
+        enums = binding[key]['enums']
         key_selected_enum = binding[key]['selected-enum']
-        if key_selected_enum == "":
-            key_selected_enum = "MEASURE"
+        if key_selected_enum == '' \
+                and binding[key].__contains__('smart-enum') \
+                and binding[key]['smart-enum'] is not None:
+            key_selected_enum = binding[key]['smart-enum']
+            self._is_smart_match = 'sm'
+
+        if key_selected_enum == '':
+            key_selected_enum = 'please select'
+            enums.insert(0, 'please select')
+
+        component.options = enums
         component.value = key_selected_enum
 
         def on_change(v):
