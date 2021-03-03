@@ -41,9 +41,9 @@
     },
     {
       "name": "innskudd",
-      "description": "9 sifret nummer gitt de som er registrert i Enhetsregisteret.",
+      "description": "",
       "dataStructureComponentType": {
-        "selected-enum": "MEASURE",
+        "selected-enum": "",
         "enums": [
           "IDENTIFIER",
           "MEASURE",
@@ -52,17 +52,17 @@
       },
       "population": {
         "concept-type": "Population",
-        "selected-id": "Population_DUMMY",
+        "selected-id": "",
         "candidates": []
       },
       "representedVariable": {
         "concept-type": "RepresentedVariable",
-        "selected-id": "RepresentedVariable_DUMMY",
+        "selected-id": "",
         "candidates": []
       },
       "sentinelValueDomain": {
         "concept-type": "EnumeratedValueDomain,DescribedValueDomain",
-        "selected-id": "DescribedValueDomain_DUMMY-id",
+        "selected-id": "",
         "candidates": []
       }
     },
