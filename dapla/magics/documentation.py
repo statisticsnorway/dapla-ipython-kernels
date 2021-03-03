@@ -86,6 +86,41 @@ class DaplaDocumentationMagics(Magics):
         return find_dataset_path(dataset_name)
 
     @line_magic
+    def validate(self, dataset_name):
+        """For validating documentation
+        """
+        try:
+            ds = self.shell.user_ns[dataset_name]
+        except KeyError:
+            raise UsageError("Could not find variable name '{}'".format(dataset_name))
+
+        if not isinstance(ds, DataFrame):
+            raise UsageError("The variable '{}' is not a pyspark DataFrame".format(dataset_name))
+
+        self.validate_documentation(ds.doc)
+
+    def validate_documentation(self, doc):
+        def capitalize_with_camelcase(s):
+            return s[0].upper() + s[1:]
+
+        variable_titles = []
+        for instance_var in doc['instanceVariables']:
+            camelcase = capitalize_with_camelcase(instance_var['name'])
+            variable_titles.append(camelcase)
+            items = []
+            self.display(widgets.HTML('name: {}'.format(camelcase)))
+
+            for key in instance_var.keys():
+                if key == 'name' or key == 'smart-description':
+                    continue
+                items.append(
+                    key
+                )
+
+        # self.display(widgets.HTML('Create a validation test 2 report <i>{}</i>'.format(dataset_name)))
+        #return 'Create a validation report {}'.format(dataset_name)
+
+    @line_magic
     def document(self, line):
         """This line magic assists creating documentation metadata for a given variable_name. The variable_name must be
         resolved to a Spark DataFrame.
