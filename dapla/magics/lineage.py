@@ -108,7 +108,7 @@ class DaplaLineageMagics(Magics):
             self._show_warning_input = True
         elif any(x in line for x in ['off', 'False', '0']):
             self._show_warning_input = False
-        elif line is not '':
+        elif line != '':
             self.display(HTML("Unrecognized option: {}".format(line)))
         self.display(HTML("Show input declaration warnings: <b>{}</b>".format(self._show_warning_input)))
 
@@ -122,7 +122,7 @@ class DaplaLineageMagics(Magics):
             self._show_warning_output = True
         elif any(x in line for x in ['off', 'False', '0']):
             self._show_warning_output = False
-        elif line is not '':
+        elif line != '':
             self.display(HTML("Unrecognized option: {}".format(line)))
         self.display(HTML("Show output declaration warnings: <b>{}</b>".format(self._show_warning_output)))
 

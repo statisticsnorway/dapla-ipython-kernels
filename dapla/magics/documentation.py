@@ -79,6 +79,10 @@ class DaplaDocumentationMagics(Magics):
         from IPython.display import clear_output
         clear_output()
 
+    @staticmethod
+    def get_dataset_path(dataset_name):
+        return find_dataset_path(dataset_name)
+
     @line_magic
     def find_path(self, dataset_name):
         """For testing, can be removed
@@ -185,13 +189,13 @@ class DaplaDocumentationMagics(Magics):
                         ds.doc = json.load(f)
                 else:
                     # Generate doc from template and prepare file
-                    dataset_path = find_dataset_path(args)
+                    dataset_path = self.get_dataset_path(args)
                     ds.doc = self._doc_template_provider(ds.schema.json(), False, dataset_path)
                     with open(fname, 'w', encoding="utf-8") as f:
                         json.dump(ds.doc, f)
             else:
                 # Generate doc from template
-                dataset_path = find_dataset_path(args)
+                dataset_path = self.get_dataset_path(args)
                 ds.doc = self._doc_template_provider(ds.schema.json(), False, dataset_path)
 
         except AuthError as err:

@@ -25,14 +25,29 @@ class DaplaDocumentationMagicsTest(unittest.TestCase):
         cls._spark.sparkContext.stop()
 
     def setUp(self):
+        def candidates(a):
+            if a == 'unitType':
+                return [
+                    {'id': 'UnitType_DUMMY', 'name': 'UnitType_DUMMY'}
+                ]
+            if a == 'selectionValue':
+                return [
+                    {"id": "id1", "name": "name1"},
+                    {"id": "id2", "name": "name2"},
+                    {"id": "id3", "name": "name3"}
+                ]
+
         doc_template_client = DatasetDocClient(lambda: 'mock-user-token', 'http://mock.no/')
         self._magic = DaplaDocumentationMagics(
             None,
             doc_template_client.get_doc_template,
-            doc_template_client.get_doc_template_candidates
+            candidates
+
+            # TODO check and add more candidates based on type
         )
         self._magic.shell = MagicMock()
         self._magic.display = MagicMock()
+        self._magic.get_dataset_path = lambda a1: ''
 
         schema = StructType([
             StructField('variable1', StringType(), True)
@@ -101,7 +116,7 @@ class DaplaDocumentationMagicsTest(unittest.TestCase):
         self.assertEqual('id-1', self._magic.check_selected_id('type', candidates, 'id-1'))
         self.assertEqual('id-2', self._magic.check_selected_id('type', candidates, 'id-2'))
 
-        self.assertEqual('id-1', self._magic.check_selected_id('type', candidates, 'missing-id'))
+        self.assertEqual('please-select', self._magic.check_selected_id('type', candidates, 'missing-id'))
 
 
 doc_template = {
@@ -137,22 +152,22 @@ doc_template = {
 }
 
 expected_widgets = "VBox(children=(HTML(value='<b style=\"font-size:14px\">Dataset metadata</b>'), \
-Box(children=(Box(children=(Label(value='Name'), Text(value='ds name')), \
+Box(children=(Box(children=(Label(value='Name'), Text(value='ds name'), HTML(value='')), \
 layout=Layout(display='flex', flex_flow='row', justify_content='space-between')), \
-Box(children=(Label(value='Description'), Textarea(value='ds description')), \
+Box(children=(Label(value='Description'), Textarea(value='ds description'), HTML(value='')), \
 layout=Layout(display='flex', flex_flow='row', justify_content='space-between')), \
-Box(children=(Label(value='UnitType'), Dropdown(options=(('UnitType_DUMMY', 'UnitType_DUMMY'),), value='UnitType_DUMMY')), \
+Box(children=(Label(value='UnitType'), Dropdown(options=(('UnitType_DUMMY', 'UnitType_DUMMY'),), value='UnitType_DUMMY'), HTML(value='')), \
 layout=Layout(display='flex', flex_flow='row', justify_content='space-between'))), \
 layout=Layout(align_items='stretch', display='flex', flex_flow='column', width='70%')), \
 HTML(value='<b style=\"font-size:14px\">Instance variables</b>'), \
 Accordion(children=(Box(children=(Box(children=(Label(value='Description'), \
-Textarea(value='iv1descr')), layout=Layout(display='flex', flex_flow='row', justify_content='space-between')), \
-Box(children=(Label(value='CheckboxValue'), Checkbox(value=False, indent=False)), \
+Textarea(value='iv1descr'), HTML(value='')), layout=Layout(display='flex', flex_flow='row', justify_content='space-between')), \
+Box(children=(Label(value='CheckboxValue'), Checkbox(value=False, indent=False), HTML(value='')), \
 layout=Layout(display='flex', flex_flow='row', justify_content='space-between')), \
-Box(children=(Label(value='EnumValue'), Dropdown(index=1, options=('VAL1', 'VAL2', 'VAL3'), value='VAL2')), \
+Box(children=(Label(value='EnumValue'), Dropdown(index=1, options=('VAL1', 'VAL2', 'VAL3'), value='VAL2'), HTML(value='')), \
 layout=Layout(display='flex', flex_flow='row', justify_content='space-between')), \
 Box(children=(Label(value='SelectionValue'), \
-Dropdown(index=2, options=(('name1', 'id1'), ('name2', 'id2'), ('name3', 'id3')), value='id3')), \
+Dropdown(index=2, options=(('name1', 'id1'), ('name2', 'id2'), ('name3', 'id3')), value='id3'), HTML(value='')), \
 layout=Layout(display='flex', flex_flow='row', justify_content='space-between'))), \
 layout=Layout(align_items='stretch', display='flex', flex_flow='column', width='70%')),), selected_index=None, \
 _titles={'0': 'Iv1'})))\n"
