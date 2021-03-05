@@ -131,12 +131,19 @@ class DaplaDocumentationMagics(Magics):
         def capitalize_with_camelcase(s):
             return s[0].upper() + s[1:]
 
+        def status(instance):
+            if instance['dataStructureComponentType']['selected-enum'] == '':
+                return 'not selected'
+            if instance['dataStructureComponentType'].__contains__('smart-enum'):
+                return 'smart'
+            return 'ok'
+
         variable_titles = []
         for instance_var in doc['instanceVariables']:
             camelcase = capitalize_with_camelcase(instance_var['name'])
             variable_titles.append(camelcase)
             items = []
-            self.display(widgets.HTML('name: {}'.format(camelcase)))
+            self.display(widgets.HTML('<b>{}</b> <i>{}</i>'.format(camelcase, status(instance_var))))
 
             for key in instance_var.keys():
                 if key == 'name' or key == 'smart-description':
