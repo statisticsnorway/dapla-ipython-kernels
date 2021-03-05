@@ -47,6 +47,30 @@ def map_doc_output(doc_json):
         'instanceVariables': list(map(map_variable, filter(filter_ignored_variables, doc_json['instanceVariables'])))}
 
 
+def remove_not_selected(doc_json):
+    def filter_not_selected_variables(variable):
+        if variable['dataStructureComponentType']['selected-enum'] == '':
+            return False
+        types = ('population', 'representedVariable', 'sentinelValueDomain')
+        for t in types:
+            if variable[t]['selected-id'] == 'please-select':
+                return False
+        return variable['description'] is not None and variable['description'] != ''
+
+    def map_variable(variable):
+        return dict(map(map_variable_field, variable.items()))
+
+    def map_variable_field(variable_field):
+        return variable_field
+
+    return {
+        'name': doc_json['name'],
+        'description': doc_json['description'],
+        'unitType': doc_json['unitType'],
+        'instanceVariables': list(
+            map(map_variable, filter(filter_not_selected_variables, doc_json['instanceVariables'])))}
+
+
 @magics_class
 class DaplaDocumentationMagics(Magics):
     """Magics related to documentation management (loading, saving, editing, ...)."""

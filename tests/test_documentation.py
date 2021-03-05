@@ -9,7 +9,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType, StructField, StringType
 from IPython.core.error import UsageError
 
-from dapla.magics.documentation import DaplaDocumentationMagics, map_doc_output
+from dapla.magics.documentation import DaplaDocumentationMagics, map_doc_output, remove_not_selected
 from dapla.services.clients import DatasetDocClient
 from tests import resolve_filename
 
@@ -101,6 +101,16 @@ class DaplaDocumentationMagicsTest(unittest.TestCase):
 
         output = map_doc_output(doc_template)
         self.assertEqual(expected_doc, output)
+
+
+    def test_check_and_remove_output(self):
+        with open(resolve_filename('doc_with_smart_template.json'), 'r') as f:
+            doc_template = json.load(f)
+
+        doc_output = map_doc_output(doc_template)
+        output = remove_not_selected(doc_output)
+        print(json.dumps(output, indent=2))
+
 
     def test_check_selected_id(self):
         candidates = [
