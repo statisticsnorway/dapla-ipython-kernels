@@ -122,7 +122,7 @@ class DaplaDocumentationMagics(Magics):
                 )
 
         # self.display(widgets.HTML('Create a validation test 2 report <i>{}</i>'.format(dataset_name)))
-        #return 'Create a validation report {}'.format(dataset_name)
+        # return 'Create a validation report {}'.format(dataset_name)
 
     @line_magic
     def document(self, line):
@@ -331,6 +331,8 @@ class DaplaDocumentationMagics(Magics):
                 and binding[key].__contains__('smart-enum') \
                 and binding[key]['smart-enum'] is not None:
             key_selected_enum = binding[key]['smart-enum']
+            binding[key]['selected-enum'] = key_selected_enum
+
             self._is_smart_match = 'sm'
 
         if key_selected_enum == '':
