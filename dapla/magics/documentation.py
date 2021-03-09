@@ -153,8 +153,6 @@ class DaplaDocumentationMagics(Magics):
                     key
                 )
 
-        # self.display(widgets.HTML('Create a validation test 2 report <i>{}</i>'.format(dataset_name)))
-        # return 'Create a validation report {}'.format(dataset_name)
 
     @line_magic
     def document(self, line):
