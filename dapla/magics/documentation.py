@@ -17,7 +17,8 @@ def extract_doc(df):
     if not isinstance(df, DataFrame):
         raise UsageError("The variable '{}' is not a pyspark DataFrame".format(df))
     if hasattr(df, 'doc'):
-        return map_doc_output(df.doc)
+        output = map_doc_output(df.doc)
+        return remove_not_selected(output)
     else:
         return None
 
