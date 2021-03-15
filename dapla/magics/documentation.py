@@ -52,10 +52,15 @@ def remove_not_selected(doc_json):
     def filter_not_selected_variables(variable):
         if variable['dataStructureComponentType']['selected-enum'] == '':
             return False
+        if variable['dataStructureComponentType'].__contains__('smart-enum'):
+            del variable['dataStructureComponentType']['smart-enum']
         types = ('population', 'representedVariable', 'sentinelValueDomain')
         for t in types:
             if variable[t]['selected-id'] == 'please-select':
                 return False
+            if variable[t].__contains__('smart-match-id'):
+                del variable[t]['smart-match-id']
+
         return variable['description'] is not None and variable['description'] != ''
 
     def map_variable(variable):
