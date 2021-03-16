@@ -61,6 +61,9 @@ def remove_not_selected(doc_json):
             if variable[t].__contains__('smart-match-id'):
                 del variable[t]['smart-match-id']
 
+        if variable.__contains__('smart-description'):
+            del variable['smart-description']
+
         return variable['description'] is not None and variable['description'] != ''
 
     def map_variable(variable):
