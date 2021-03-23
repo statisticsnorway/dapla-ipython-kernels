@@ -37,12 +37,16 @@ class DaplaDocumentationMagicsTest(unittest.TestCase):
                     {"id": "id3", "name": "name3"}
                 ]
 
+        def enums(type, enumType):
+            # if enumType == 'enums':
+            return ["VAL1", "VAL2", "VAL3"]
+
         doc_template_client = DatasetDocClient(lambda: 'mock-user-token', 'http://mock.no/')
         self._magic = DaplaDocumentationMagics(
             None,
             doc_template_client.get_doc_template,
-            candidates
-
+            candidates,
+            enums
             # TODO check and add more candidates based on type
         )
         self._magic.shell = MagicMock()
@@ -108,6 +112,8 @@ class DaplaDocumentationMagicsTest(unittest.TestCase):
             doc_template = json.load(f)
 
         doc_output = map_doc_output(doc_template)
+        # print(json.dumps(doc_output, indent=2))
+
         output = remove_not_selected(doc_output)
         print(json.dumps(output, indent=2))
 

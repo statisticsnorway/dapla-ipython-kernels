@@ -84,11 +84,12 @@ def remove_not_selected(doc_json):
 class DaplaDocumentationMagics(Magics):
     """Magics related to documentation management (loading, saving, editing, ...)."""
 
-    def __init__(self, shell, doc_template_provider, doc_template_candidates_provider):
+    def __init__(self, shell, doc_template_provider, doc_template_candidates_provider, _doc_enums_provider):
         # You must call the parent constructor
         super(DaplaDocumentationMagics, self).__init__(shell)
         self._doc_template_provider = doc_template_provider
         self._doc_template_candidates_provider = doc_template_candidates_provider
+        self._doc_enums_provider = _doc_enums_provider
         self._status = None
         self._result_status = ''
         self._is_smart_match = ''  # TODO: find a better solutions to this
@@ -363,14 +364,20 @@ class DaplaDocumentationMagics(Magics):
 
     def create_enum_selector(self, binding, key):
         component = widgets.Dropdown()
-        enums = binding[key]['enums']
-        key_selected_enum = binding[key]['selected-enum']
+        binding_key = binding[key]
+        enums = binding_key['enums']
+        key_selected_enum = binding_key['selected-enum']
         if key_selected_enum == '' \
-                and binding[key].__contains__('smart-enum') \
-                and binding[key]['smart-enum'] is not None:
-            key_selected_enum = binding[key]['smart-enum']
-            binding[key]['selected-enum'] = key_selected_enum
+                and binding_key.__contains__('smart-enum') \
+                and binding_key['smart-enum'] is not None:
+            key_selected_enum = binding_key['smart-enum']
+            binding_key['selected-enum'] = key_selected_enum
             self._is_smart_match = 'sm'
+
+        candidates_from_service = self._doc_enums_provider('InstanceVariable', key)
+        if len(candidates_from_service) > 0:
+            enums = candidates_from_service
+            binding_key['enums'] = enums
 
         if key_selected_enum == '':
             self._is_smart_match = ''  # in case smart-enum is empty
@@ -445,5 +452,6 @@ def load_ipython_extension(ipython):
     # This class must be registered with a manually created instance,
     # since its constructor has different arguments from the default:
     magics = DaplaDocumentationMagics(ipython, doc_template_client.get_doc_template,
-                                      doc_template_client.get_doc_template_candidates)
+                                      doc_template_client.get_doc_template_candidates,
+                                      doc_template_client.get_doc_enums)
     ipython.register_magics(magics)
