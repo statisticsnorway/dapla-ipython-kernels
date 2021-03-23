@@ -370,10 +370,10 @@ class DaplaDocumentationMagics(Magics):
                 and binding[key]['smart-enum'] is not None:
             key_selected_enum = binding[key]['smart-enum']
             binding[key]['selected-enum'] = key_selected_enum
-
             self._is_smart_match = 'sm'
 
         if key_selected_enum == '':
+            self._is_smart_match = ''  # in case smart-enum is empty
             key_selected_enum = 'please select'
             enums.insert(0, 'please select')
 
