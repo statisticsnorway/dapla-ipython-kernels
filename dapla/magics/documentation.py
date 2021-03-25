@@ -400,7 +400,8 @@ class DaplaDocumentationMagics(Magics):
             if cand['id'] == selected_id:
                 return selected_id
 
-        if selected_id != "":  # we have an id but it have been removed from candidates (Concept-lds)
+        # TODO: fix this when loading existing json
+        if selected_id != "" and selected_id != "please-select":  # we have an id but it have been removed from candidates (Concept-lds)
             self._status = '{}" is removed! please make a new selection'.format(selected_id)
 
         # add please select to candidates and make this selected
