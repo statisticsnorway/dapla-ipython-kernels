@@ -254,12 +254,18 @@ class DaplaDocumentationMagics(Magics):
             return s[0].upper() + s[1:]
 
         def create_dropdown_box(dict, title, key):
+            def get_title(name):
+                if self._is_smart_match != '':
+                    return name + ' - ' + self._is_smart_match
+                return name
+
             inst_dropdown = self.create_widget(dict, key)
-            label = widgets.Label(value=title)
             if self._status is None:
-                dropdown = [label, inst_dropdown, widgets.HTML(self._is_smart_match)]
+                label = widgets.Label(value=get_title(title))
+                dropdown = [label, inst_dropdown] 
                 self._is_smart_match = ''
             else:
+                label = widgets.Label(value=title)
                 dropdown = [label, inst_dropdown, widgets.HTML(self._status)]
                 self._result_status = \
                     '<br/><i style="font-size:12px;color:red">' + \
