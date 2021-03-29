@@ -406,8 +406,8 @@ class DaplaDocumentationMagics(Magics):
             if cand['id'] == selected_id:
                 return selected_id
 
-        # TODO: fix this when loading existing json
-        if selected_id != "" and selected_id != "please-select":  # we have an id but it have been removed from candidates (Concept-lds)
+        if selected_id != "" and selected_id != "please-select":
+            # we have an id but it have been removed from candidates (Concept-lds)
             self._status = '{}" is removed! please make a new selection'.format(selected_id)
 
         # add please select to candidates and make this selected
@@ -426,7 +426,7 @@ class DaplaDocumentationMagics(Magics):
         selected_id = binding_key['selected-id']
         if binding_key.__contains__('smart-match-id') and binding_key['smart-match-id'] != "":
             smart_match_id = binding_key['smart-match-id']
-            selected_id = smart_match_id  # TODO: show this on control
+            selected_id = smart_match_id
             self._is_smart_match = 'sm'
 
         candidates_from_service = self._doc_template_candidates_provider(key)
