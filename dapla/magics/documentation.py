@@ -2,7 +2,7 @@
 # itself to be running already.  It only creates the magics subclass but
 # doesn't instantiate it yet.
 from __future__ import print_function
-from IPython.core.magic import (Magics, magics_class, line_magic)
+from IPython.core.magic import (Magics, magics_class, line_magic, cell_magic)
 from IPython.core.error import UsageError, StdinNotImplementedError
 import os
 import json
@@ -10,13 +10,15 @@ from pyspark.sql import DataFrame
 import ipywidgets as widgets
 from ..services.clients import DatasetDocClient
 from ..jupyterextensions.authextension import AuthClient, AuthError
+from ..magics.lineage import find_dataset_path
 
 
 def extract_doc(df):
     if not isinstance(df, DataFrame):
         raise UsageError("The variable '{}' is not a pyspark DataFrame".format(df))
     if hasattr(df, 'doc'):
-        return map_doc_output(df.doc)
+        output = map_doc_output(df.doc)
+        return remove_not_selected(output)
     else:
         return None
 
@@ -46,17 +48,52 @@ def map_doc_output(doc_json):
         'instanceVariables': list(map(map_variable, filter(filter_ignored_variables, doc_json['instanceVariables'])))}
 
 
+def remove_not_selected(doc_json):
+    def filter_not_selected_variables(variable):
+        if variable['dataStructureComponentType']['selected-enum'] == '':
+            return False
+        if variable['dataStructureComponentType'].__contains__('smart-enum'):
+            del variable['dataStructureComponentType']['smart-enum']
+        types = ('population', 'representedVariable', 'sentinelValueDomain')
+        for t in types:
+            if variable[t]['selected-id'] == 'please-select':
+                return False
+            if variable[t].__contains__('smart-match-id'):
+                del variable[t]['smart-match-id']
+
+        if variable.__contains__('smart-description'):
+            del variable['smart-description']
+
+        return variable['description'] is not None and variable['description'] != ''
+
+    def map_variable(variable):
+        return dict(map(map_variable_field, variable.items()))
+
+    def map_variable_field(variable_field):
+        return variable_field
+
+    return {
+        'name': doc_json['name'],
+        'description': doc_json['description'],
+        'unitType': doc_json['unitType'],
+        'instanceVariables': list(
+            map(map_variable, filter(filter_not_selected_variables, doc_json['instanceVariables'])))}
+
+
 @magics_class
 class DaplaDocumentationMagics(Magics):
     """Magics related to documentation management (loading, saving, editing, ...)."""
 
-    def __init__(self, shell, doc_template_provider, doc_template_candidates_provider):
+    def __init__(self, shell, doc_template_provider, doc_template_candidates_provider, _doc_enums_provider):
         # You must call the parent constructor
         super(DaplaDocumentationMagics, self).__init__(shell)
         self._doc_template_provider = doc_template_provider
         self._doc_template_candidates_provider = doc_template_candidates_provider
+        self._doc_enums_provider = _doc_enums_provider
         self._status = None
         self._result_status = ''
+        self._is_smart_match = ''  # TODO: find a better solutions to this
+        self._declared_outputs = {}
 
     @staticmethod
     def ensure_valid_filename(fname):
@@ -75,6 +112,56 @@ class DaplaDocumentationMagics(Magics):
     def clear_output():
         from IPython.display import clear_output
         clear_output()
+
+    @staticmethod
+    def get_dataset_path(dataset_name):
+        return find_dataset_path(dataset_name)
+
+    @line_magic
+    def find_path(self, dataset_name):
+        """For testing, can be removed
+        """
+        return find_dataset_path(dataset_name)
+
+    @line_magic
+    def validate(self, dataset_name):
+        """For validating documentation
+        """
+        try:
+            ds = self.shell.user_ns[dataset_name]
+        except KeyError:
+            raise UsageError("Could not find variable name '{}'".format(dataset_name))
+
+        if not isinstance(ds, DataFrame):
+            raise UsageError("The variable '{}' is not a pyspark DataFrame".format(dataset_name))
+
+        self.validate_documentation(ds.doc)
+
+    def validate_documentation(self, doc):
+        def capitalize_with_camelcase(s):
+            return s[0].upper() + s[1:]
+
+        def status(instance):
+            if instance['dataStructureComponentType']['selected-enum'] == '':
+                return 'not selected'
+            if instance['dataStructureComponentType'].__contains__('smart-enum'):
+                return 'smart'
+            return 'ok'
+
+        variable_titles = []
+        for instance_var in doc['instanceVariables']:
+            camelcase = capitalize_with_camelcase(instance_var['name'])
+            variable_titles.append(camelcase)
+            items = []
+            self.display(widgets.HTML('<b>{}</b> <i>{}</i>'.format(camelcase, status(instance_var))))
+
+            for key in instance_var.keys():
+                if key == 'name' or key == 'smart-description':
+                    continue
+                items.append(
+                    key
+                )
+
 
     @line_magic
     def document(self, line):
@@ -141,12 +228,15 @@ class DaplaDocumentationMagics(Magics):
                         ds.doc = json.load(f)
                 else:
                     # Generate doc from template and prepare file
-                    ds.doc = self._doc_template_provider(ds.schema.json(), False)
+                    dataset_path = self.get_dataset_path(args)
+                    ds.doc = self._doc_template_provider(ds.schema.json(), False, dataset_path)
                     with open(fname, 'w', encoding="utf-8") as f:
                         json.dump(ds.doc, f)
             else:
                 # Generate doc from template
-                ds.doc = self._doc_template_provider(ds.schema.json(), False)
+                dataset_path = self.get_dataset_path(args)
+                ds.doc = self._doc_template_provider(ds.schema.json(), False, dataset_path)
+
         except AuthError as err:
             err.print_warning()
             return
@@ -164,14 +254,21 @@ class DaplaDocumentationMagics(Magics):
             return s[0].upper() + s[1:]
 
         def create_dropdown_box(dict, title, key):
+            def get_title(name):
+                if self._is_smart_match != '':
+                    return name + ' - ' + self._is_smart_match
+                return name
+
             inst_dropdown = self.create_widget(dict, key)
-            label = widgets.Label(value=title)
             if self._status is None:
-                dropdown = [label, inst_dropdown]
+                label = widgets.Label(value=get_title(title))
+                dropdown = [label, inst_dropdown] 
+                self._is_smart_match = ''
             else:
+                label = widgets.Label(value=title)
                 dropdown = [label, inst_dropdown, widgets.HTML(self._status)]
                 self._result_status = \
-                    '<br/><i style="font-size:12px;color:red">' +\
+                    '<br/><i style="font-size:12px;color:red">' + \
                     'Types have been removed from Concept! Please check each instance variable</i>'
                 self._status = None
             return widgets.Box(dropdown, layout=form_item_layout)
@@ -181,7 +278,7 @@ class DaplaDocumentationMagics(Magics):
             form_items = []
 
             for key in instanceVar.keys():
-                if key == 'name':
+                if key == 'name' or key == 'smart-description':
                     continue
                 form_items.append(
                     create_dropdown_box(instanceVar, capitalize_with_camelcase(key), key)
@@ -212,7 +309,8 @@ class DaplaDocumentationMagics(Magics):
         )
 
         display_objs = (widgets.HTML('<b style="font-size:14px">Dataset metadata</b>'), dataset_doc,
-                        widgets.HTML('<b style="font-size:14px">Instance variables</b>{}'.format(self._result_status)), accordion)
+                        widgets.HTML('<b style="font-size:14px">Instance variables</b>{}'.format(self._result_status)),
+                        accordion)
 
         def on_button_clicked(b):
             with open(fname, 'w', encoding="utf-8") as f:
@@ -227,25 +325,32 @@ class DaplaDocumentationMagics(Magics):
             self.display(widgets.VBox(display_objs))
 
     def create_widget(self, binding, key):
-        if isinstance(binding[key], str):
+        binding_key = binding[key]
+        if isinstance(binding_key, str):
             return self.create_text_input(binding, key)
-        elif isinstance(binding[key], bool):
+        elif isinstance(binding_key, bool):
             return self.create_checkbox_input(binding, key)
-        elif isinstance(binding[key], dict) and binding[key].__contains__('enums'):
+        elif isinstance(binding_key, dict) and binding_key.__contains__('enums'):
             return self.create_enum_selector(binding, key)
-        elif isinstance(binding[key], dict) and binding[key].__contains__('candidates'):
+        elif isinstance(binding_key, dict) and binding_key.__contains__('candidates'):
             return self.create_candidate_selector(binding, key)
         else:
             raise UsageError("Unable to create a widget for '{}' with value '{}'\n{}"
-                             .format(key, binding[key], json.dumps(binding, indent=2)))
+                             .format(key, binding_key, json.dumps(binding, indent=2)))
 
     def create_text_input(self, binding, key):
+        value = binding[key]
         if key == 'description':
+            if len(value) == 0 \
+                    and binding.__contains__('smart-description') \
+                    and binding['smart-description'] is not None:
+                value = binding['smart-description']
+                self._is_smart_match = 'sm'
             component = widgets.Textarea()
         else:
             component = widgets.Text()
 
-        component.value = binding[key]
+        component.value = value
 
         def on_change(v):
             binding[key] = v['new']
@@ -265,8 +370,28 @@ class DaplaDocumentationMagics(Magics):
 
     def create_enum_selector(self, binding, key):
         component = widgets.Dropdown()
-        component.options = binding[key]['enums']
-        component.value = binding[key]['selected-enum']
+        binding_key = binding[key]
+        enums = binding_key['enums']
+        key_selected_enum = binding_key['selected-enum']
+        if key_selected_enum == '' \
+                and binding_key.__contains__('smart-enum') \
+                and binding_key['smart-enum'] is not None:
+            key_selected_enum = binding_key['smart-enum']
+            binding_key['selected-enum'] = key_selected_enum
+            self._is_smart_match = 'sm'
+
+        candidates_from_service = self._doc_enums_provider('InstanceVariable', key)
+        if len(candidates_from_service) > 0:
+            enums = candidates_from_service
+            binding_key['enums'] = enums
+
+        if key_selected_enum == '':
+            self._is_smart_match = ''  # in case smart-enum is empty
+            key_selected_enum = 'please select'
+            enums.insert(0, 'please select')
+
+        component.options = enums
+        component.value = key_selected_enum
 
         def on_change(v):
             binding[key]['selected-enum'] = v['new']
@@ -280,16 +405,29 @@ class DaplaDocumentationMagics(Magics):
         for cand in candidates:
             if cand['id'] == selected_id:
                 return selected_id
-        # return first if selected id is not found
-        first = candidates[0]['id']
-        self._status = '{}" is removed! selecting:{}'.format(selected_id, first)
+
+        if selected_id != "" and selected_id != "please-select":
+            # we have an id but it have been removed from candidates (Concept-lds)
+            self._status = '{}" is removed! please make a new selection'.format(selected_id)
+
+        # add please select to candidates and make this selected
+        candidates.insert(0, {
+            'id': 'please-select',
+            'name': 'please select'
+        })
+        first = 'please-select'  # candidates[0]['id']
+
         return first
 
     def create_candidate_selector(self, binding, key):
         component = widgets.Dropdown()
         binding_key = binding[key]
-        candidates = binding_key['candidates']
+        candidates = []
         selected_id = binding_key['selected-id']
+        if binding_key.__contains__('smart-match-id') and binding_key['smart-match-id'] != "":
+            smart_match_id = binding_key['smart-match-id']
+            selected_id = smart_match_id
+            self._is_smart_match = 'sm'
 
         candidates_from_service = self._doc_template_candidates_provider(key)
         if len(candidates_from_service) > 0:
@@ -321,5 +459,6 @@ def load_ipython_extension(ipython):
     # This class must be registered with a manually created instance,
     # since its constructor has different arguments from the default:
     magics = DaplaDocumentationMagics(ipython, doc_template_client.get_doc_template,
-                                      doc_template_client.get_doc_template_candidates)
+                                      doc_template_client.get_doc_template_candidates,
+                                      doc_template_client.get_doc_enums)
     ipython.register_magics(magics)

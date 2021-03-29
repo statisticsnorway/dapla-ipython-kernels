@@ -47,9 +47,11 @@ def validate_documentation(write_method):
         schema = self._df.schema.json()
         validation = data_doc_client.get_doc_validation(schema, template_doc)
         status = validation['status']
-        if status == 'ok':
-            return write_method(self, ns)
         message = validation['message']
+        if status == 'ok':
+            if message != '':
+                print(message)
+            return write_method(self, ns)
         raise UsageError("{}".format(message))
     return wrapper
 

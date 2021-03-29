@@ -1,0 +1,119 @@
+{
+  "name": "konto datasett demo",
+  "description": "Inneholder kontoer av forskjellig art.",
+  "unitType": {
+    "concept-type": "UnitType",
+    "selected-id": "UnitType_DUMMY",
+    "candidates": []
+  },
+  "instanceVariables": [
+    {
+      "name": "kontonummer",
+      "description": "",
+      "smart-description": "smart-description",
+      "dataStructureComponentType": {
+        "selected-enum": "",
+        "smart-enum": "IDENTIFIER",
+        "enums": [
+          "IDENTIFIER",
+          "MEASURE",
+          "ATTRIBUTE"
+        ]
+      },
+      "population": {
+        "concept-type": "Population",
+        "selected-id": "",
+        "smart-match-id": "Population_DUMMY",
+        "candidates": []
+      },
+      "representedVariable": {
+        "concept-type": "RepresentedVariable",
+        "selected-id": "",
+        "smart-match-id": "id-2",
+        "candidates": []
+      },
+      "sentinelValueDomain": {
+        "concept-type": "EnumeratedValueDomain,DescribedValueDomain",
+        "selected-id": "",
+        "smart-match-id": "EnumeratedValueDomain_DUMMY-id",
+        "candidates": []
+      }
+    },
+    {
+      "name": "innskudd",
+      "description": "",
+      "dataStructureComponentType": {
+        "selected-enum": "",
+        "enums": [
+          "IDENTIFIER",
+          "MEASURE",
+          "ATTRIBUTE"
+        ]
+      },
+      "population": {
+        "concept-type": "Population",
+        "selected-id": "",
+        "candidates": []
+      },
+      "representedVariable": {
+        "concept-type": "RepresentedVariable",
+        "selected-id": "",
+        "candidates": []
+      },
+      "sentinelValueDomain": {
+        "concept-type": "EnumeratedValueDomain,DescribedValueDomain",
+        "selected-id": "",
+        "candidates": []
+      }
+    },
+    {
+      "name": "gjeld",
+      "description": "en sum av penger i hele kroner brukt i en kontekst. Dette kan v\u00e6re en transaksjon, saldo o.l.",
+      "dataStructureComponentType": {
+        "selected-enum": "MEASURE",
+        "enums": [
+          "IDENTIFIER",
+          "MEASURE",
+          "ATTRIBUTE"
+        ]
+      },
+      "population": {
+        "concept-type": "Population",
+        "selected-id": "Population_DUMMY",
+        "candidates": []
+      },
+      "representedVariable": {
+        "concept-type": "RepresentedVariable",
+        "selected-id": "RepresentedVariable_DUMMY",
+        "candidates": [
+          {
+            "id": "some-id-could-be-guid",
+            "name": "NationalFamilyIdentifier"
+          },
+          {
+            "id": "RepresentedVariable_DUMMY",
+            "name": "RepresentedVariable_default"
+          }
+        ]
+      },
+      "sentinelValueDomain": {
+        "concept-type": "EnumeratedValueDomain,DescribedValueDomain",
+        "selected-id": "EnumeratedValueDomain_DUMMY-id",
+        "candidates": [
+          {
+            "id": "EnumeratedValueDomain_DUMMY-id",
+            "name": "EnumeratedValueDomain_default"
+          },
+          {
+            "id": "some-id-could-be-guid",
+            "name": "Heltall"
+          },
+          {
+            "id": "DescribedValueDomain_DUMMY-id",
+            "name": "DescribedValueDomain_DUMMY"
+          }
+        ]
+      }
+    }
+  ]
+}

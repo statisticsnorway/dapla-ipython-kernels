@@ -9,7 +9,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType, StructField, StringType
 from IPython.core.error import UsageError
 
-from dapla.magics.documentation import DaplaDocumentationMagics, map_doc_output
+from dapla.magics.documentation import DaplaDocumentationMagics, map_doc_output, remove_not_selected
 from dapla.services.clients import DatasetDocClient
 from tests import resolve_filename
 
@@ -25,14 +25,33 @@ class DaplaDocumentationMagicsTest(unittest.TestCase):
         cls._spark.sparkContext.stop()
 
     def setUp(self):
+        def candidates(a):
+            if a == 'unitType':
+                return [
+                    {'id': 'UnitType_DUMMY', 'name': 'UnitType_DUMMY'}
+                ]
+            if a == 'selectionValue':
+                return [
+                    {"id": "id1", "name": "name1"},
+                    {"id": "id2", "name": "name2"},
+                    {"id": "id3", "name": "name3"}
+                ]
+
+        def enums(type, enumType):
+            # if enumType == 'enums':
+            return ["VAL1", "VAL2", "VAL3"]
+
         doc_template_client = DatasetDocClient(lambda: 'mock-user-token', 'http://mock.no/')
         self._magic = DaplaDocumentationMagics(
             None,
             doc_template_client.get_doc_template,
-            doc_template_client.get_doc_template_candidates
+            candidates,
+            enums
+            # TODO check and add more candidates based on type
         )
         self._magic.shell = MagicMock()
         self._magic.display = MagicMock()
+        self._magic.get_dataset_path = lambda a1: ''
 
         schema = StructType([
             StructField('variable1', StringType(), True)
@@ -87,6 +106,18 @@ class DaplaDocumentationMagicsTest(unittest.TestCase):
         output = map_doc_output(doc_template)
         self.assertEqual(expected_doc, output)
 
+
+    def test_check_and_remove_output(self):
+        with open(resolve_filename('doc_with_smart_template.json'), 'r') as f:
+            doc_template = json.load(f)
+
+        doc_output = map_doc_output(doc_template)
+        # print(json.dumps(doc_output, indent=2))
+
+        output = remove_not_selected(doc_output)
+        print(json.dumps(output, indent=2))
+
+
     def test_check_selected_id(self):
         candidates = [
             {
@@ -101,7 +132,7 @@ class DaplaDocumentationMagicsTest(unittest.TestCase):
         self.assertEqual('id-1', self._magic.check_selected_id('type', candidates, 'id-1'))
         self.assertEqual('id-2', self._magic.check_selected_id('type', candidates, 'id-2'))
 
-        self.assertEqual('id-1', self._magic.check_selected_id('type', candidates, 'missing-id'))
+        self.assertEqual('please-select', self._magic.check_selected_id('type', candidates, 'missing-id'))
 
 
 doc_template = {

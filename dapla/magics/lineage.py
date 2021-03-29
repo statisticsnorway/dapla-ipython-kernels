@@ -45,6 +45,10 @@ def extract_lineage(df, path, version):
             return None
 
 
+def find_dataset_path(name):
+    return get_ipython().run_line_magic(DaplaLineageMagics.find_output_path_for_dataset.__name__, "{}".format(name))
+
+
 def map_lineage(lineage_json):
     def mapper(field):
         return {
@@ -104,7 +108,7 @@ class DaplaLineageMagics(Magics):
             self._show_warning_input = True
         elif any(x in line for x in ['off', 'False', '0']):
             self._show_warning_input = False
-        elif line is not '':
+        elif line != '':
             self.display(HTML("Unrecognized option: {}".format(line)))
         self.display(HTML("Show input declaration warnings: <b>{}</b>".format(self._show_warning_input)))
 
@@ -118,7 +122,7 @@ class DaplaLineageMagics(Magics):
             self._show_warning_output = True
         elif any(x in line for x in ['off', 'False', '0']):
             self._show_warning_output = False
-        elif line is not '':
+        elif line != '':
             self.display(HTML("Unrecognized option: {}".format(line)))
         self.display(HTML("Show output declaration warnings: <b>{}</b>".format(self._show_warning_output)))
 
@@ -151,6 +155,14 @@ class DaplaLineageMagics(Magics):
             if line.strip().startswith('#'):
                 continue
             self._declared_outputs[line] = {}
+
+    @line_magic
+    def find_output_path_for_dataset(self, line):
+        for key in self._declared_outputs:
+            name = key.split('/')[-1]
+            if name == line:
+                return key
+        raise UsageError("output need to be declared for " + line)
 
     @line_magic
     def on_input_load(self, line):

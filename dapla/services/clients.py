@@ -104,12 +104,13 @@ class MetadataPublisherClient(AbstractClient):
 
 class DatasetDocClient(AbstractClient):
 
-    def get_doc_template(self, spark_schema, use_simple):
+    def get_doc_template(self, spark_schema, use_simple, datasetPath):
         request_url = self._base_url + '/doc/template'
         request = {
             "schema": spark_schema,
             "schemaType": "SPARK",
-            "useSimpleFiltering": use_simple
+            "useSimpleFiltering": use_simple,
+            "datasetPath": datasetPath
         }
         response = requests.post(request_url, json=request,
                                  headers={
@@ -142,6 +143,16 @@ class DatasetDocClient(AbstractClient):
                                 }, allow_redirects=False)
         handle_error_codes(response)
         return response.json()
+
+    def get_doc_enums(self, concept_type, enum_type):
+        request_url = self._base_url + '/doc/enums/' + concept_type + '/' + enum_type
+        response = requests.get(request_url,
+                                headers={
+                                    'Authorization': 'Bearer %s' % self._user_token_provider()
+                                }, allow_redirects=False)
+        handle_error_codes(response)
+        return response.json()
+
 
     def get_doc_validation(self, spark_schema, doc_template):
         request_url = self._base_url + '/doc/validate'
