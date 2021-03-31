@@ -20,6 +20,15 @@
           "ATTRIBUTE"
         ]
       },
+      "valuation": {
+        "selected-enum": "",
+        "enums": [
+          "SENSITIVE",
+          "SHIELDED",
+          "INTERNAL",
+          "OPEN"
+        ]
+      },
       "population": {
         "concept-type": "Population",
         "selected-id": "",

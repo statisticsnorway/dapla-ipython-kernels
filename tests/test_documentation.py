@@ -194,7 +194,7 @@ class DaplaDocumentationMagicsTest(unittest.TestCase):
 
         self.assertEqual(expected, output)
 
-    def test_remove_optional_not_assigend(self):
+    def test_remove_optional_not_assigned(self):
         data = {
             "name": "ds name",
             "description": "ds description",
@@ -212,7 +212,7 @@ class DaplaDocumentationMagicsTest(unittest.TestCase):
                     "optionalConcept": {
                         "concept-type": "optionalConcept",
                         "selected-id": "",
-                        "optional": "true",
+                        "optional": True,
                         "smart-match-id": "",
                         "candidates": []
                     },
@@ -222,7 +222,7 @@ class DaplaDocumentationMagicsTest(unittest.TestCase):
                     },
                     "optionalEnum": {
                         "selected-enum": "please-select",
-                        "optional": "true",
+                        "optional": True,
                         "smart-enum": "",
                     }
                 }
