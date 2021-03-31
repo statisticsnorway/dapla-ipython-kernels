@@ -155,7 +155,6 @@ class DaplaDocumentationMagicsTest(unittest.TestCase):
         output = remove_not_selected(doc_output)
 
         self.assertEqual(expected, output)
-        print(json.dumps(output, indent=2))
 
     def test_check_and_remove_not_assigned_instance_variables(self):
         data = {
@@ -193,6 +192,68 @@ class DaplaDocumentationMagicsTest(unittest.TestCase):
         doc_output = map_doc_output(data)
         output = remove_not_selected(doc_output)
 
+        self.assertEqual(expected, output)
+
+    def test_remove_optional_not_assigend(self):
+        data = {
+            "name": "ds name",
+            "description": "ds description",
+            'unitType': {'concept-type': 'UnitType', 'selected-id': 'UnitType_DUMMY', 'candidates': []},
+            "instanceVariables": [
+                {
+                    "name": "iv1",
+                    "description": "iv1descr",
+                    "conceptExample": {
+                        "concept-type": "ConceptExample",
+                        "selected-id": "id",
+                        "smart-match-id": "",
+                        "candidates": []
+                    },
+                    "optionalConcept": {
+                        "concept-type": "optionalConcept",
+                        "selected-id": "",
+                        "optional": "true",
+                        "smart-match-id": "",
+                        "candidates": []
+                    },
+                    "enumExample": {
+                        "selected-enum": "VAL1",
+                        "smart-enum": "",
+                    },
+                    "optionalEnum": {
+                        "selected-enum": "please-select",
+                        "optional": "true",
+                        "smart-enum": "",
+                    }
+                }
+            ]
+        }
+
+        expected = {
+            "name": "ds name",
+            "description": "ds description",
+            "unitType": {
+                "concept-type": "UnitType",
+                "selected-id": "UnitType_DUMMY"
+            },
+            "instanceVariables": [
+                {
+                    "name": "iv1",
+                    "description": "iv1descr",
+                    "conceptExample": {
+                        "concept-type": "ConceptExample",
+                        "selected-id": "id"
+                    },
+                    "enumExample": {
+                        "selected-enum": "VAL1"
+                    }
+                }
+            ]
+        }
+
+        doc_output = map_doc_output(data)
+        output = remove_not_selected(doc_output)
+        # print(json.dumps(output, indent=2))
         self.assertEqual(expected, output)
 
 

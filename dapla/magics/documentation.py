@@ -62,19 +62,34 @@ def remove_not_selected(doc_json):
         def has_smart_id(value):
             return value.__contains__('smart-match-id')
 
+        def is_optional(value):
+            return value.__contains__('optional') and value['optional'].lower() == 'true'
+
+        def check_selection_value(selection_type):
+            return data[selection_type] == '' or data[selection_type] == 'please-select'
+
+        to_delete = []
         for key in variable.keys():
             data = variable[key]
-            print("data for: " + key + " -> " + str(data))
             if is_enum(data):
-                if data['selected-enum'] == '' or data['selected-enum'] == 'please-select':
-                    return False  # we are missing selection -> remove this
+                if check_selection_value('selected-enum'):
+                    if is_optional(data):
+                        to_delete.append(key)
+                    else:
+                        return False  # we are missing selection -> remove this
                 if has_smart_enum(data):
                     del data['smart-enum']
             if is_type(data):
-                if data['selected-id'] == '' or data['selected-id'] == 'please-select':
-                    return False  # we are missing selection > remove this
+                if check_selection_value('selected-id'):
+                    if is_optional(data):
+                        to_delete.append(key)
+                    else:
+                        return False  # we are missing selection > remove this
                 if has_smart_id(data):
                     del data['smart-match-id']
+
+        for key in to_delete:
+            del variable[key]
 
         if variable.__contains__('smart-description'):
             del variable['smart-description']
