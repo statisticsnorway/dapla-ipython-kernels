@@ -63,7 +63,7 @@ def remove_not_selected(doc_json):
             return value.__contains__('smart-match-id')
 
         def is_optional(value):
-            return value.__contains__('optional') and value['optional'].lower() == 'true'
+            return value.__contains__('optional') and value['optional']
 
         def check_selection_value(selection_type):
             return data[selection_type] == '' or data[selection_type] == 'please-select'
