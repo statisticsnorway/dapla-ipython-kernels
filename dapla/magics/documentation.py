@@ -50,16 +50,31 @@ def map_doc_output(doc_json):
 
 def remove_not_selected(doc_json):
     def filter_not_selected_variables(variable):
-        if variable['dataStructureComponentType']['selected-enum'] == '':
-            return False
-        if variable['dataStructureComponentType'].__contains__('smart-enum'):
-            del variable['dataStructureComponentType']['smart-enum']
-        types = ('population', 'representedVariable', 'sentinelValueDomain')
-        for t in types:
-            if variable[t]['selected-id'] == 'please-select':
-                return False
-            if variable[t].__contains__('smart-match-id'):
-                del variable[t]['smart-match-id']
+        def is_enum(value):
+            return value.__contains__('selected-enum')
+
+        def has_smart_enum(value):
+            return value.__contains__('smart-enum')
+
+        def is_type(value):
+            return value.__contains__('concept-type')
+
+        def has_smart_id(value):
+            return value.__contains__('smart-match-id')
+
+        for key in variable.keys():
+            data = variable[key]
+            print("data for: " + key + " -> " + str(data))
+            if is_enum(data):
+                if data['selected-enum'] == '' or data['selected-enum'] == 'please-select':
+                    return False  # we are missing selection -> remove this
+                if has_smart_enum(data):
+                    del data['smart-enum']
+            if is_type(data):
+                if data['selected-id'] == '' or data['selected-id'] == 'please-select':
+                    return False  # we are missing selection > remove this
+                if has_smart_id(data):
+                    del data['smart-match-id']
 
         if variable.__contains__('smart-description'):
             del variable['smart-description']
@@ -162,7 +177,6 @@ class DaplaDocumentationMagics(Magics):
                     key
                 )
 
-
     @line_magic
     def document(self, line):
         """This line magic assists creating documentation metadata for a given variable_name. The variable_name must be
@@ -262,7 +276,7 @@ class DaplaDocumentationMagics(Magics):
             inst_dropdown = self.create_widget(dict, key)
             if self._status is None:
                 label = widgets.Label(value=get_title(title))
-                dropdown = [label, inst_dropdown] 
+                dropdown = [label, inst_dropdown]
                 self._is_smart_match = ''
             else:
                 label = widgets.Label(value=title)
