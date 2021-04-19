@@ -14,23 +14,23 @@ def read(filename):
 
 
 DEPENDENCIES = [
-    'ipython>=4.0.2',
-    'pyspark',
-    'jupyterhub',
-    'oauthenticator',
-    'jwt',
-    'requests',
+    'ipython==7.22.0',
+    'pyspark==3.1.1',
+    'jupyterhub==1.3.0',
+    'oauthenticator==14.0.0',
+    'jwt==1.2.0',
+    'requests==2.25.1',
     'requests-cache==0.5.2',
-    'responses',
-    'ipykernel>=4.2.2',
-    'notebook>=4.2',
-    'tornado>=4',
+    'responses==0.13.2',
+    'ipykernel==5.5.3',
+    'notebook==6.3.0',
+    'tornado==6.1',
     'gcsfs==0.6.2',
-    'pyarrow>=0.17.*',
-    'pandas',
-    'google-auth>=1.2',
-    'google-auth-oauthlib',
-    'ipywidgets'
+    'pyarrow==3.0.0',
+    'pandas==1.2.4',
+    'google-auth==1.28.1',
+    'google-auth-oauthlib==0.4.4',
+    'ipywidgets==7.6.3'
 ]
 
 setup(
