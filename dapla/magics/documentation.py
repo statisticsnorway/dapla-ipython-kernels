@@ -289,9 +289,10 @@ class DaplaDocumentationMagics(Magics):
 
         def create_dropdown_box(dict, title, key):
             def get_title(name):
+                translated = self._doc_translation_provider(name)["name"]
                 if self._is_smart_match != '':
-                    return name + ' - ' + self._is_smart_match
-                return name
+                    return translated + ' - ' + self._is_smart_match
+                return translated
 
             inst_dropdown = self.create_widget(dict, key)
             if self._status is None:
