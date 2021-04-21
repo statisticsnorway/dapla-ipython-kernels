@@ -37,12 +37,17 @@ class DaplaDocumentationMagicsTest(unittest.TestCase):
                     {"id": "id3", "name": "name3"}
                 ]
 
-        def enums(type, enumType):
+        def enums(concept_type, enum_type):
             # if enumType == 'enums':
             return ["VAL1", "VAL2", "VAL3"]
 
-        def translation(type):
-            return []
+        def translation(concept_type):
+            if concept_type == "SelectionValue":
+                return {
+                    "name": "Seleksjon Verdi",
+                    "description": "Beskrivelse av Seleksjon Verdi"
+                }
+            return {"name": concept_type}
 
         doc_template_client = DatasetDocClient(lambda: 'mock-user-token', 'http://mock.no/')
         self._magic = DaplaDocumentationMagics(
@@ -51,7 +56,6 @@ class DaplaDocumentationMagicsTest(unittest.TestCase):
             candidates,
             enums,
             translation
-            # TODO check and add more candidates based on type
         )
         self._magic.shell = MagicMock()
         self._magic.display = MagicMock()
@@ -260,7 +264,6 @@ class DaplaDocumentationMagicsTest(unittest.TestCase):
         # print(json.dumps(output, indent=2))
         self.assertEqual(expected, output)
 
-
     def test_check_selected_id(self):
         candidates = [
             {
@@ -317,7 +320,7 @@ Box(children=(Label(value='CheckboxValue'), Checkbox(value=False, indent=False))
 layout=Layout(display='flex', flex_flow='row', justify_content='space-between')), \
 Box(children=(Label(value='EnumValue'), Dropdown(index=1, options=('VAL1', 'VAL2', 'VAL3'), value='VAL2')), \
 layout=Layout(display='flex', flex_flow='row', justify_content='space-between')), \
-Box(children=(Label(value='SelectionValue'), \
+Box(children=(Label(value='Seleksjon Verdi'), \
 Dropdown(index=2, options=(('name1', 'id1'), ('name2', 'id2'), ('name3', 'id3')), value='id3')), \
 layout=Layout(display='flex', flex_flow='row', justify_content='space-between'))), \
 layout=Layout(align_items='stretch', display='flex', flex_flow='column', width='70%')),), selected_index=None, \
