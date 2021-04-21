@@ -41,12 +41,16 @@ class DaplaDocumentationMagicsTest(unittest.TestCase):
             # if enumType == 'enums':
             return ["VAL1", "VAL2", "VAL3"]
 
+        def translation(type):
+            return []
+
         doc_template_client = DatasetDocClient(lambda: 'mock-user-token', 'http://mock.no/')
         self._magic = DaplaDocumentationMagics(
             None,
             doc_template_client.get_doc_template,
             candidates,
-            enums
+            enums,
+            translation
             # TODO check and add more candidates based on type
         )
         self._magic.shell = MagicMock()
@@ -279,8 +283,8 @@ doc_template = {
     "description": "ds description",
     'unitType': {'concept-type': 'UnitType',
                  'selected-id': 'UnitType_DUMMY',
-                 'candidates': [
-                     {'id': 'UnitType_DUMMY', 'name': 'UnitType_DUMMY'}]},
+                 'candidates': []
+                 },
     "instanceVariables": [
         {
             "name": "iv1",
@@ -288,19 +292,11 @@ doc_template = {
             "checkboxValue": False,
             "enumValue": {
                 "selected-enum": "VAL2",
-                "enums": [
-                    "VAL1",
-                    "VAL2",
-                    "VAL3"
-                ]
+                "enums": []
             },
             "selectionValue": {
                 "selected-id": "id3",
-                "candidates": [
-                    {"id": "id1", "name": "name1"},
-                    {"id": "id2", "name": "name2"},
-                    {"id": "id3", "name": "name3"}
-                ]
+                "candidates": []
             }
         }
     ]

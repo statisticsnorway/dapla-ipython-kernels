@@ -114,12 +114,17 @@ def remove_not_selected(doc_json):
 class DaplaDocumentationMagics(Magics):
     """Magics related to documentation management (loading, saving, editing, ...)."""
 
-    def __init__(self, shell, doc_template_provider, doc_template_candidates_provider, _doc_enums_provider):
+    def __init__(self, shell,
+                 doc_template_provider,
+                 doc_template_candidates_provider,
+                 _doc_enums_provider,
+                 doc_translation_provider):
         # You must call the parent constructor
         super(DaplaDocumentationMagics, self).__init__(shell)
         self._doc_template_provider = doc_template_provider
         self._doc_template_candidates_provider = doc_template_candidates_provider
         self._doc_enums_provider = _doc_enums_provider
+        self._doc_translation_provider = doc_translation_provider
         self._status = None
         self._result_status = ''
         self._is_smart_match = ''  # TODO: find a better solutions to this
@@ -489,5 +494,7 @@ def load_ipython_extension(ipython):
     # since its constructor has different arguments from the default:
     magics = DaplaDocumentationMagics(ipython, doc_template_client.get_doc_template,
                                       doc_template_client.get_doc_template_candidates,
-                                      doc_template_client.get_doc_enums)
+                                      doc_template_client.get_doc_enums,
+                                      doc_template_client.get_doc_translation
+                                      )
     ipython.register_magics(magics)
