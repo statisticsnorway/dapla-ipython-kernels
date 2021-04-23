@@ -4,6 +4,7 @@ import json
 
 requests_cache.install_cache('client_cache', backend='memory', expire_after=2)
 
+
 class AbstractClient:
     def __init__(
             self,
@@ -159,6 +160,12 @@ class DatasetDocClient(AbstractClient):
                                 headers={
                                     'Authorization': 'Bearer %s' % self._user_token_provider()
                                 }, allow_redirects=False)
+        if response.status_code == 404:
+            # For now avoid breaking code if we are running against service missing this endpoint
+            return {
+                "name": concept_type
+            }
+
         handle_error_codes(response)
         return response.json()
 
