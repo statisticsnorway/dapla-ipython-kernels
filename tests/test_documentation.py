@@ -39,7 +39,7 @@ class DaplaDocumentationMagicsTest(unittest.TestCase):
 
         def enums(concept_type, enum_type):
             # if enumType == 'enums':
-            return ["VAL1", "VAL2", "VAL3"]
+            return {"tec-name-VAL1": "VAL1", "tec-name-VAL2": "VAL2", "tec-name-VAL3": "VAL3"}
 
         def translation(concept_type):
             if concept_type == "SelectionValue":

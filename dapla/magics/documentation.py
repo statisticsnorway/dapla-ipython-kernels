@@ -417,19 +417,22 @@ class DaplaDocumentationMagics(Magics):
 
         candidates_from_service = self._doc_enums_provider('InstanceVariable', key)
         if len(candidates_from_service) > 0:
-            enums = candidates_from_service
-            binding_key['enums'] = enums
+            enums = list(candidates_from_service.values())
+            binding_key['enums'] = candidates_from_service.keys()
 
-        if key_selected_enum == '':
+        if key_selected_enum == '' or key_selected_enum not in enums:  # TODO: translate selection
             self._is_smart_match = ''  # in case smart-enum is empty
             key_selected_enum = 'please select'
             enums.insert(0, 'please select')
 
         component.options = enums
-        component.value = key_selected_enum
+        if(candidates_from_service.__contains__(key_selected_enum)):
+            component.value = candidates_from_service[key_selected_enum]
+        else:
+            component.value = key_selected_enum
 
         def on_change(v):
-            binding[key]['selected-enum'] = v['new']
+            binding[key]['selected-enum'] = v['new'] # TODO: translate back to technical value
 
         component.observe(on_change, names='value')
         return component
