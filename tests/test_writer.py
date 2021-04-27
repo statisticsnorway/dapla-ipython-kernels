@@ -23,7 +23,7 @@ class WriterTest(unittest.TestCase):
                                   'https://metadata-distributor.staging-bip-app.ssb.no',
                                   'staging-bip',
                                   'metadata-distributor-dataset-updates',
-                                  'https://catalog.staging-bip-app.ssb.no',
+                                  'https://dapla-catalog.staging-bip-app.ssb.no',
                                   )
         writer.write(table, '/felles/bjornandre/python/test1', valuation="INTERNAL", state="INPUT")
 
