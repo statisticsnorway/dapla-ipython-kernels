@@ -37,7 +37,7 @@ class DaplaDocumentationMagicsTest(unittest.TestCase):
                     {"id": "id3", "name": "name3"}
                 ]
 
-        def enums(concept_type, enum_type):
+        def enums(enum_type):
             # if enumType == 'enums':
             return {"VAL1": "display-VAL1", "VAL2": "display-VAL2", "VAL3": "display-VAL3"}
 

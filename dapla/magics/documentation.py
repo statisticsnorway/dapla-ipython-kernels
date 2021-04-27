@@ -407,7 +407,7 @@ class DaplaDocumentationMagics(Magics):
         component = widgets.Dropdown()
         binding_key = binding[key]
         key_selected_enum = binding_key['selected-enum']
-        enum_tech_name_to_translated_name = self._doc_enums_provider('InstanceVariable', key)
+        enum_tech_name_to_translated_name = self._doc_enums_provider(key)
         if key_selected_enum == '' \
                 and binding_key.__contains__('smart-enum') \
                 and binding_key['smart-enum'] is not None:

@@ -145,8 +145,9 @@ class DatasetDocClient(AbstractClient):
         handle_error_codes(response)
         return response.json()
 
-    def get_doc_enums(self, concept_type, enum_type):
-        request_url = self._base_url + '/doc/enums/' + concept_type + '/' + enum_type
+    def get_doc_enums(self, enum_type):
+        # TODO: get languageCode from user
+        request_url = self._base_url + '/doc/enums/' + enum_type + "?languageCode=nb"
         response = requests.get(request_url,
                                 headers={
                                     'Authorization': 'Bearer %s' % self._user_token_provider()
