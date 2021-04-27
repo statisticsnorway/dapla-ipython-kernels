@@ -406,7 +406,6 @@ class DaplaDocumentationMagics(Magics):
     def create_enum_selector(self, binding, key):
         component = widgets.Dropdown()
         binding_key = binding[key]
-        enums = binding_key['enums']
         key_selected_enum = binding_key['selected-enum']
         if key_selected_enum == '' \
                 and binding_key.__contains__('smart-enum') \
@@ -415,10 +414,8 @@ class DaplaDocumentationMagics(Magics):
             binding_key['selected-enum'] = key_selected_enum
             self._is_smart_match = 'sm'
 
-        candidates_from_service = self._doc_enums_provider('InstanceVariable', key)
-        if len(candidates_from_service) > 0:
-            enums = list(candidates_from_service.values())
-            binding_key['enums'] = candidates_from_service.keys()
+        enum_tech_name_to_translated_name = self._doc_enums_provider('InstanceVariable', key)
+        enums = list(enum_tech_name_to_translated_name.values())
 
         if key_selected_enum == '' or key_selected_enum not in enums:  # TODO: translate selection
             self._is_smart_match = ''  # in case smart-enum is empty
@@ -426,13 +423,16 @@ class DaplaDocumentationMagics(Magics):
             enums.insert(0, 'please select')
 
         component.options = enums
-        if(candidates_from_service.__contains__(key_selected_enum)):
-            component.value = candidates_from_service[key_selected_enum]
+        if enum_tech_name_to_translated_name.__contains__(key_selected_enum):
+            component.value = enum_tech_name_to_translated_name[key_selected_enum]
         else:
-            component.value = key_selected_enum
+            component.value = key_selected_enum  # This could indicate an error
+
+        enum_translated_name_to_teck_name = {v: k for k, v in enum_tech_name_to_translated_name.items()}
 
         def on_change(v):
-            binding[key]['selected-enum'] = v['new'] # TODO: translate back to technical value
+            selected_enum = v['new']
+            binding[key]['selected-enum'] = enum_translated_name_to_teck_name[selected_enum]
 
         component.observe(on_change, names='value')
         return component
