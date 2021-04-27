@@ -39,7 +39,7 @@ class DaplaDocumentationMagicsTest(unittest.TestCase):
 
         def enums(concept_type, enum_type):
             # if enumType == 'enums':
-            return {"tec-name-VAL1": "VAL1", "tec-name-VAL2": "VAL2", "tec-name-VAL3": "VAL3"}
+            return {"VAL1": "display-VAL1", "VAL2": "display-VAL2", "VAL3": "display-VAL3"}
 
         def translation(concept_type):
             if concept_type == "SelectionValue":
@@ -318,7 +318,7 @@ Accordion(children=(Box(children=(Box(children=(Label(value='Description'), \
 Textarea(value='iv1descr')), layout=Layout(display='flex', flex_flow='row', justify_content='space-between')), \
 Box(children=(Label(value='CheckboxValue'), Checkbox(value=False, indent=False)), \
 layout=Layout(display='flex', flex_flow='row', justify_content='space-between')), \
-Box(children=(Label(value='EnumValue'), Dropdown(index=1, options=('VAL1', 'VAL2', 'VAL3'), value='VAL2')), \
+Box(children=(Label(value='EnumValue'), Dropdown(index=1, options=('display-VAL1', 'display-VAL2', 'display-VAL3'), value='display-VAL2')), \
 layout=Layout(display='flex', flex_flow='row', justify_content='space-between')), \
 Box(children=(Label(value='Seleksjon Verdi'), \
 Dropdown(index=2, options=(('name1', 'id1'), ('name2', 'id2'), ('name3', 'id3')), value='id3')), \

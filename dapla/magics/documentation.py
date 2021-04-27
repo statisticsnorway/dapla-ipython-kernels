@@ -407,17 +407,18 @@ class DaplaDocumentationMagics(Magics):
         component = widgets.Dropdown()
         binding_key = binding[key]
         key_selected_enum = binding_key['selected-enum']
+        enum_tech_name_to_translated_name = self._doc_enums_provider('InstanceVariable', key)
         if key_selected_enum == '' \
                 and binding_key.__contains__('smart-enum') \
                 and binding_key['smart-enum'] is not None:
             key_selected_enum = binding_key['smart-enum']
-            binding_key['selected-enum'] = key_selected_enum
-            self._is_smart_match = 'sm'
+            if enum_tech_name_to_translated_name.__contains__(key_selected_enum):
+                binding_key['selected-enum'] = key_selected_enum
+                self._is_smart_match = 'sm'
 
-        enum_tech_name_to_translated_name = self._doc_enums_provider('InstanceVariable', key)
         enums = list(enum_tech_name_to_translated_name.values())
 
-        if key_selected_enum == '' or key_selected_enum not in enums:  # TODO: translate selection
+        if key_selected_enum == '' or not enum_tech_name_to_translated_name.__contains__(key_selected_enum):
             self._is_smart_match = ''  # in case smart-enum is empty
             key_selected_enum = 'please select'
             enums.insert(0, 'please select')
@@ -426,7 +427,10 @@ class DaplaDocumentationMagics(Magics):
         if enum_tech_name_to_translated_name.__contains__(key_selected_enum):
             component.value = enum_tech_name_to_translated_name[key_selected_enum]
         else:
-            component.value = key_selected_enum  # This could indicate an error
+            # This could indicate an error - should be able to find translation
+            enums.insert(0, 'please select')
+            component.options = enums
+            component.value = 'please select'
 
         enum_translated_name_to_teck_name = {v: k for k, v in enum_tech_name_to_translated_name.items()}
 
