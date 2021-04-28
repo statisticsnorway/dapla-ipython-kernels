@@ -31,8 +31,8 @@ class EnvGenericOAuthenticator(GenericOAuthenticator):
         from tornado.httputil import url_concat
         # Retrieve user authentication info, decode, and check if refresh is needed
         auth_state = await user.get_auth_state()
-        access_token = jwt.decode(auth_state['access_token'], options={"verify_signature": False})
-        refresh_token = jwt.decode(auth_state['refresh_token'], options={"verify_signature": False})
+        access_token = jwt.JWT().decode(auth_state['access_token'], do_verify=False)
+        refresh_token = jwt.JWT().decode(auth_state['refresh_token'], do_verify=False)
         diff_access = access_token['exp']-time.time()
         diff_refresh = refresh_token['exp']-time.time()
         # Allow SPARK_USER_TOKEN_EXPIRY_BUFFER_SECS before expiry
