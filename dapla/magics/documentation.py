@@ -426,11 +426,6 @@ class DaplaDocumentationMagics(Magics):
         component.options = enums
         if enum_tech_name_to_translated_name.__contains__(key_selected_enum):
             component.value = enum_tech_name_to_translated_name[key_selected_enum]
-        else:
-            # This could indicate an error - should be able to find translation
-            enums.insert(0, 'please select')
-            component.options = enums
-            component.value = 'please select'
 
         enum_translated_name_to_teck_name = {v: k for k, v in enum_tech_name_to_translated_name.items()}
 
