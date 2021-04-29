@@ -18,7 +18,6 @@ DEPENDENCIES = [
     'pyspark==3.1.1',
     'jupyterhub==1.3.0',
     'oauthenticator==14.0.0',
-    'jwt==1.2.0',
     'requests==2.25.1',
     'requests-cache==0.5.2',
     'responses==0.13.2',
