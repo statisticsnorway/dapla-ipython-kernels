@@ -4,6 +4,7 @@ import json
 
 requests_cache.install_cache('client_cache', backend='memory', expire_after=2)
 
+
 class AbstractClient:
     def __init__(
             self,
@@ -144,8 +145,9 @@ class DatasetDocClient(AbstractClient):
         handle_error_codes(response)
         return response.json()
 
-    def get_doc_enums(self, concept_type, enum_type):
-        request_url = self._base_url + '/doc/enums/' + concept_type + '/' + enum_type
+    def get_doc_enums(self, enum_type):
+        # TODO: get languageCode from user
+        request_url = self._base_url + '/doc/enums/' + enum_type + "?languageCode=nb"
         response = requests.get(request_url,
                                 headers={
                                     'Authorization': 'Bearer %s' % self._user_token_provider()
@@ -153,6 +155,20 @@ class DatasetDocClient(AbstractClient):
         handle_error_codes(response)
         return response.json()
 
+    def get_doc_translation(self, concept_type):
+        request_url = self._base_url + '/doc/translation/' + concept_type
+        response = requests.get(request_url,
+                                headers={
+                                    'Authorization': 'Bearer %s' % self._user_token_provider()
+                                }, allow_redirects=False)
+        if response.status_code == 404:
+            # For now avoid breaking code if we are running against service missing this endpoint
+            return {
+                "name": concept_type
+            }
+
+        handle_error_codes(response)
+        return response.json()
 
     def get_doc_validation(self, spark_schema, doc_template):
         request_url = self._base_url + '/doc/validate'

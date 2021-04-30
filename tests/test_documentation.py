@@ -37,17 +37,25 @@ class DaplaDocumentationMagicsTest(unittest.TestCase):
                     {"id": "id3", "name": "name3"}
                 ]
 
-        def enums(type, enumType):
+        def enums(enum_type):
             # if enumType == 'enums':
-            return ["VAL1", "VAL2", "VAL3"]
+            return {"VAL1": "display-VAL1", "VAL2": "display-VAL2", "VAL3": "display-VAL3"}
+
+        def translation(concept_type):
+            if concept_type == "SelectionValue":
+                return {
+                    "name": "Seleksjon Verdi",
+                    "description": "Beskrivelse av Seleksjon Verdi"
+                }
+            return {"name": concept_type}
 
         doc_template_client = DatasetDocClient(lambda: 'mock-user-token', 'http://mock.no/')
         self._magic = DaplaDocumentationMagics(
             None,
             doc_template_client.get_doc_template,
             candidates,
-            enums
-            # TODO check and add more candidates based on type
+            enums,
+            translation
         )
         self._magic.shell = MagicMock()
         self._magic.display = MagicMock()
@@ -256,7 +264,6 @@ class DaplaDocumentationMagicsTest(unittest.TestCase):
         # print(json.dumps(output, indent=2))
         self.assertEqual(expected, output)
 
-
     def test_check_selected_id(self):
         candidates = [
             {
@@ -279,8 +286,8 @@ doc_template = {
     "description": "ds description",
     'unitType': {'concept-type': 'UnitType',
                  'selected-id': 'UnitType_DUMMY',
-                 'candidates': [
-                     {'id': 'UnitType_DUMMY', 'name': 'UnitType_DUMMY'}]},
+                 'candidates': []
+                 },
     "instanceVariables": [
         {
             "name": "iv1",
@@ -288,19 +295,11 @@ doc_template = {
             "checkboxValue": False,
             "enumValue": {
                 "selected-enum": "VAL2",
-                "enums": [
-                    "VAL1",
-                    "VAL2",
-                    "VAL3"
-                ]
+                "enums": []
             },
             "selectionValue": {
                 "selected-id": "id3",
-                "candidates": [
-                    {"id": "id1", "name": "name1"},
-                    {"id": "id2", "name": "name2"},
-                    {"id": "id3", "name": "name3"}
-                ]
+                "candidates": []
             }
         }
     ]
@@ -319,9 +318,9 @@ Accordion(children=(Box(children=(Box(children=(Label(value='Description'), \
 Textarea(value='iv1descr')), layout=Layout(display='flex', flex_flow='row', justify_content='space-between')), \
 Box(children=(Label(value='CheckboxValue'), Checkbox(value=False, indent=False)), \
 layout=Layout(display='flex', flex_flow='row', justify_content='space-between')), \
-Box(children=(Label(value='EnumValue'), Dropdown(index=1, options=('VAL1', 'VAL2', 'VAL3'), value='VAL2')), \
+Box(children=(Label(value='EnumValue'), Dropdown(index=1, options=('display-VAL1', 'display-VAL2', 'display-VAL3'), value='display-VAL2')), \
 layout=Layout(display='flex', flex_flow='row', justify_content='space-between')), \
-Box(children=(Label(value='SelectionValue'), \
+Box(children=(Label(value='Seleksjon Verdi'), \
 Dropdown(index=2, options=(('name1', 'id1'), ('name2', 'id2'), ('name3', 'id3')), value='id3')), \
 layout=Layout(display='flex', flex_flow='row', justify_content='space-between'))), \
 layout=Layout(align_items='stretch', display='flex', flex_flow='column', width='70%')),), selected_index=None, \

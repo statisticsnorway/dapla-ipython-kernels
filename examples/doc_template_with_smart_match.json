@@ -14,38 +14,29 @@
       "dataStructureComponentType": {
         "selected-enum": "",
         "smart-enum": "IDENTIFIER",
-        "enums": [
-          "IDENTIFIER",
-          "MEASURE",
-          "ATTRIBUTE"
-        ]
+        "enums": true
       },
       "valuation": {
         "selected-enum": "",
-        "enums": [
-          "SENSITIVE",
-          "SHIELDED",
-          "INTERNAL",
-          "OPEN"
-        ]
+        "enums": true
       },
       "population": {
         "concept-type": "Population",
         "selected-id": "",
         "smart-match-id": "Population_DUMMY",
-        "candidates": []
+        "candidates": true
       },
       "representedVariable": {
         "concept-type": "RepresentedVariable",
         "selected-id": "",
         "smart-match-id": "id-2",
-        "candidates": []
+        "candidates": true
       },
       "sentinelValueDomain": {
         "concept-type": "EnumeratedValueDomain,DescribedValueDomain",
         "selected-id": "",
         "smart-match-id": "EnumeratedValueDomain_DUMMY-id",
-        "candidates": []
+        "candidates": true
       }
     },
     {
@@ -53,16 +44,12 @@
       "description": "",
       "dataStructureComponentType": {
         "selected-enum": "",
-        "enums": [
-          "IDENTIFIER",
-          "MEASURE",
-          "ATTRIBUTE"
-        ]
+        "enums": true
       },
       "population": {
         "concept-type": "Population",
         "selected-id": "",
-        "candidates": []
+        "candidates": true
       },
       "representedVariable": {
         "concept-type": "RepresentedVariable",
@@ -72,7 +59,7 @@
       "sentinelValueDomain": {
         "concept-type": "EnumeratedValueDomain,DescribedValueDomain",
         "selected-id": "",
-        "candidates": []
+        "candidates": true
       }
     },
     {
@@ -80,11 +67,7 @@
       "description": "en sum av penger i hele kroner brukt i en kontekst. Dette kan v\u00e6re en transaksjon, saldo o.l.",
       "dataStructureComponentType": {
         "selected-enum": "MEASURE",
-        "enums": [
-          "IDENTIFIER",
-          "MEASURE",
-          "ATTRIBUTE"
-        ]
+        "enums": true
       },
       "population": {
         "concept-type": "Population",
@@ -94,34 +77,12 @@
       "representedVariable": {
         "concept-type": "RepresentedVariable",
         "selected-id": "RepresentedVariable_DUMMY",
-        "candidates": [
-          {
-            "id": "some-id-could-be-guid",
-            "name": "NationalFamilyIdentifier"
-          },
-          {
-            "id": "RepresentedVariable_DUMMY",
-            "name": "RepresentedVariable_default"
-          }
-        ]
+        "candidates": true
       },
       "sentinelValueDomain": {
         "concept-type": "EnumeratedValueDomain,DescribedValueDomain",
         "selected-id": "EnumeratedValueDomain_DUMMY-id",
-        "candidates": [
-          {
-            "id": "EnumeratedValueDomain_DUMMY-id",
-            "name": "EnumeratedValueDomain_default"
-          },
-          {
-            "id": "some-id-could-be-guid",
-            "name": "Heltall"
-          },
-          {
-            "id": "DescribedValueDomain_DUMMY-id",
-            "name": "DescribedValueDomain_DUMMY"
-          }
-        ]
+        "candidates": true
       }
     }
   ]

@@ -114,12 +114,17 @@ def remove_not_selected(doc_json):
 class DaplaDocumentationMagics(Magics):
     """Magics related to documentation management (loading, saving, editing, ...)."""
 
-    def __init__(self, shell, doc_template_provider, doc_template_candidates_provider, _doc_enums_provider):
+    def __init__(self, shell,
+                 doc_template_provider,
+                 doc_template_candidates_provider,
+                 _doc_enums_provider,
+                 doc_translation_provider):
         # You must call the parent constructor
         super(DaplaDocumentationMagics, self).__init__(shell)
         self._doc_template_provider = doc_template_provider
         self._doc_template_candidates_provider = doc_template_candidates_provider
         self._doc_enums_provider = _doc_enums_provider
+        self._doc_translation_provider = doc_translation_provider
         self._status = None
         self._result_status = ''
         self._is_smart_match = ''  # TODO: find a better solutions to this
@@ -284,9 +289,10 @@ class DaplaDocumentationMagics(Magics):
 
         def create_dropdown_box(dict, title, key):
             def get_title(name):
+                translated = self._doc_translation_provider(name)["name"]
                 if self._is_smart_match != '':
-                    return name + ' - ' + self._is_smart_match
-                return name
+                    return translated + ' - ' + self._is_smart_match
+                return translated
 
             inst_dropdown = self.create_widget(dict, key)
             if self._status is None:
@@ -400,30 +406,32 @@ class DaplaDocumentationMagics(Magics):
     def create_enum_selector(self, binding, key):
         component = widgets.Dropdown()
         binding_key = binding[key]
-        enums = binding_key['enums']
         key_selected_enum = binding_key['selected-enum']
+        enum_tech_name_to_translated_name = self._doc_enums_provider(key)
         if key_selected_enum == '' \
                 and binding_key.__contains__('smart-enum') \
                 and binding_key['smart-enum'] is not None:
             key_selected_enum = binding_key['smart-enum']
-            binding_key['selected-enum'] = key_selected_enum
-            self._is_smart_match = 'sm'
+            if enum_tech_name_to_translated_name.__contains__(key_selected_enum):
+                binding_key['selected-enum'] = key_selected_enum
+                self._is_smart_match = 'sm'
 
-        candidates_from_service = self._doc_enums_provider('InstanceVariable', key)
-        if len(candidates_from_service) > 0:
-            enums = candidates_from_service
-            binding_key['enums'] = enums
+        enums = list(enum_tech_name_to_translated_name.values())
 
-        if key_selected_enum == '':
+        if key_selected_enum == '' or not enum_tech_name_to_translated_name.__contains__(key_selected_enum):
             self._is_smart_match = ''  # in case smart-enum is empty
             key_selected_enum = 'please select'
             enums.insert(0, 'please select')
 
         component.options = enums
-        component.value = key_selected_enum
+        if enum_tech_name_to_translated_name.__contains__(key_selected_enum):
+            component.value = enum_tech_name_to_translated_name[key_selected_enum]
+
+        enum_translated_name_to_teck_name = {v: k for k, v in enum_tech_name_to_translated_name.items()}
 
         def on_change(v):
-            binding[key]['selected-enum'] = v['new']
+            selected_enum = v['new']
+            binding[key]['selected-enum'] = enum_translated_name_to_teck_name[selected_enum]
 
         component.observe(on_change, names='value')
         return component
@@ -489,5 +497,7 @@ def load_ipython_extension(ipython):
     # since its constructor has different arguments from the default:
     magics = DaplaDocumentationMagics(ipython, doc_template_client.get_doc_template,
                                       doc_template_client.get_doc_template_candidates,
-                                      doc_template_client.get_doc_enums)
+                                      doc_template_client.get_doc_enums,
+                                      doc_template_client.get_doc_translation
+                                      )
     ipython.register_magics(magics)
