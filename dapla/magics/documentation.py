@@ -257,12 +257,16 @@ class DaplaDocumentationMagics(Magics):
         try:
             if use_file_storage:
                 file_exists = os.path.isfile(fname)
+                dataset_path = self.get_dataset_path(args)
                 if file_exists:
                     with open(fname, 'r') as f:
-                        ds.doc = json.load(f)
+                        existing_template = json.dumps(json.load(f), indent=2)
+                        try:
+                            ds.doc = self._doc_template_provider(ds.schema.json(), False, dataset_path, existing_template)
+                        except: # Have this for now so we don't fail against an older dataset-doc-service
+                            ds.doc = self._doc_template_provider(ds.schema.json(), False, dataset_path)
                 else:
                     # Generate doc from template and prepare file
-                    dataset_path = self.get_dataset_path(args)
                     ds.doc = self._doc_template_provider(ds.schema.json(), False, dataset_path)
                     with open(fname, 'w', encoding="utf-8") as f:
                         json.dump(ds.doc, f)
